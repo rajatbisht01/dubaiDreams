@@ -42,13 +42,13 @@ export default function Home() {
         <Hero />
 
         {/* 🏠 Featured Properties */}
-        <section className="py-16 bg-background">
+        <section className="p-8 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Featured Properties</h2>
             </div>
             {loading ? <p className="text-center text-muted-foreground">Loading properties...</p> :
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-12">
                 {renderProperties(featuredProperties)}
               </div>
             }
@@ -61,13 +61,13 @@ export default function Home() {
         </section>
 
         {/* 🏡 Properties for Sale */}
-        <section className="py-16 bg-secondary/30">
+        <section className="p-8 bg-secondary/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Properties for Sale</h2>
             </div>
             {loading ? <p className="text-center text-muted-foreground">Loading properties...</p> :
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-12">
                 {renderProperties(buyProperties)}
               </div>
             }
@@ -80,13 +80,13 @@ export default function Home() {
         </section>
 
         {/* 🏘️ Properties for Rent */}
-        <section className="py-16 bg-background">
+        <section className="p-8 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Properties for Rent</h2>
             </div>
             {loading ? <p className="text-center text-muted-foreground">Loading properties...</p> :
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-12">
                 {renderProperties(rentProperties)}
               </div>
             }

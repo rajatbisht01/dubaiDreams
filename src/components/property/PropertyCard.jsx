@@ -17,6 +17,7 @@ import {
   Mail,
 } from "lucide-react";
 import { usePropertyStore } from "@/store/propertyStore";
+import Carousel from "../ui/carousel";
 
 const PropertyCard = ({
   id,
@@ -66,16 +67,37 @@ const PropertyCard = ({
     >
       {/* Image Section */}
       <div className="relative overflow-hidden">
-        <img
-          src={images?.[0]?.url || "/assets/property-1.jpg"}
-          alt={images?.[0]?.alt_text || title}
-          className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-        />
+        {images && images.length > 1 ? (
+          // Multiple images - show carousel
+       <Carousel
+  items={images.map(img => ({ url: img.url, alt: img.alt_text || title }))}
+  baseWidth="100%"         // full width of card
+  autoplay={true}
+  autoplayDelay={3000}
+  pauseOnHover={true}
+  loop={true}
+  round={false}            // keep it rectangular like fallback
+  height={256}             // match fallback image h-64 (16rem)
+  gap={0}                  // remove spacing so single image fills area
+/>
+
+
+
+        ) : (
+          // Single image - fallback if images array is empty
+          <img
+            src={images?.[0]?.url || "/assets/property-1.jpg"}
+            alt={images?.[0]?.alt_text || title}
+            className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+        )}
 
         {/* Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
           {is_featured && (
-            <Badge className="bg-primary hover:bg-primary-light">Featured</Badge>
+            <Badge className="bg-primary hover:bg-primary-light">
+              Featured
+            </Badge>
           )}
           {verified && (
             <Badge className="bg-green-600 hover:bg-green-700">Verified</Badge>
@@ -135,7 +157,9 @@ const PropertyCard = ({
               ${price?.toLocaleString()}
             </div>
             {area_sqft && (
-              <div className="text-sm text-muted-foreground">{area_sqft} sq ft</div>
+              <div className="text-sm text-muted-foreground">
+                {area_sqft} sq ft
+              </div>
             )}
           </div>
 
