@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+
+@theme {
+  /* Brand */
+  --color-brand: #3b82f6; /* calm blue, modern + minimal */
+
+  /* Neutrals */
+  --color-bg-light: #f4f4f4 ;
+   --color-bg-dark:#eeeeee ;
+  --color-surface: #f9fafb;
+  --color-text: #111827;
+  --color-muted: #6b7280;
+   
+
+  /* Primary */
+  --color-primary: hsl(195 85% 45%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-primary-hover: hsl(195 85% 40%);
+
+  /* Secondary */
+  --color-secondary: hsl(180 25% 95%);
+  --color-secondary-foreground: hsl(195 85% 45%);
+
+  /* Variants */
+  --color-muted-bg: hsl(210 20% 96%);
+  --color-muted-foreground: hsl(200 15% 50%);
+
+  --color-accent: hsl(160 60% 50%);
+  --color-accent-foreground: hsl(0 0% 100%);
+
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+
+  /* UI Tokens */
+  --color-border: hsl(217 20% 94%);
+  --color-input: hsl(217 20% 94%);
+  --color-ring: hsl(217 91% 60%);
+
+  /* Premium Design Tokens */
+  --hero-gradient: linear-gradient(135deg, hsl(195 85% 45%) 0%, hsl(160 60% 50%) 100%);
+  --hero-overlay: linear-gradient(135deg, rgba(52, 152, 219, 0.85) 0%, rgba(46, 125, 50, 0.9) 100%);
+  --card-shadow: 0 2px 8px hsl(195 50% 20% / 0.12);
+  --card-shadow-hover: 0 8px 32px hsl(195 50% 20% / 0.25);
+  --premium-shadow: 0 6px 24px hsl(var(--color-primary) / 0.2);
+
+  /* Typography */
+  --heading-gradient: linear-gradient(135deg, hsl(195 85% 45%) 0%, hsl(160 60% 50%) 100%);
+
+  /* Animation Durations */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* Sidebar */
+  --color-sidebar-background: hsl(0 0% 98%);
+  --color-sidebar-foreground: hsl(240 5.3% 26.1%);
+  --color-sidebar-primary: hsl(240 5.9% 10%);
+  --color-sidebar-primary-foreground: hsl(0 0% 98%);
+  --color-sidebar-accent: hsl(240 4.8% 95.9%);
+  --color-sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --color-sidebar-border: hsl(220 13% 91%);
+  --color-sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes slide-down {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+@keyframes slide-left {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes slide-right {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
+.animate-slide-down { animation: slide-down 0.3s ease-out forwards; }
+.animate-slide-left { animation: slide-left 0.3s ease-out forwards; }
+.animate-slide-right { animation: slide-right 0.3s ease-out forwards; }
