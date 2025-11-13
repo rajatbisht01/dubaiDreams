@@ -63,7 +63,7 @@ const PropertyCard = ({
   return (
     <Card
       onClick={handleClick}
-      className="overflow-hidden hover:shadow-large transition-all duration-300 group h-full flex flex-col cursor-pointer"
+      className="overflow-hidden hover:shadow-large rounded-3xl transition-all duration-300 group h-full flex flex-col cursor-pointer"
     >
       {/* Image Section */}
       <div className="relative overflow-hidden">
@@ -80,7 +80,7 @@ const PropertyCard = ({
             pauseOnHover={true}
             loop={true}
             round={false} // keep it rectangular like fallback
-            height={256} // match fallback image h-64 (16rem)
+            height={300} // match fallback image h-64 (16rem)
             gap={0} // remove spacing so single image fills area
           />
         ) : (

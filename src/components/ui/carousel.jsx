@@ -88,7 +88,7 @@ export default function Carousel({
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden ${round ? 'rounded-full border border-white p-4' : ''}`}
+      className={`relative overflow-hidden ${round ? ' border border-white p-4s' : ''}`}
       style={{
         width: typeof baseWidth === 'number' ? `${baseWidth}px` : baseWidth,
         height: `${height}px`,
@@ -117,7 +117,7 @@ export default function Carousel({
               key={index}
               className={`relative shrink-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing ${round ? 'rounded-full' : 'rounded-[12px]'}`}
               style={{
-                width: `${itemWidth}px`,
+                width: `100%`,
                 height: '100%',
                 rotateY,
                 borderRadius: round ? '50%' : '12px',
