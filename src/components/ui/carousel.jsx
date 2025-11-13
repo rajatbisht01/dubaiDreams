@@ -70,20 +70,9 @@ export default function Carousel({
     }
   };
 
-  const handleDragEnd = (_, info) => {
-    const offset = info.offset.x;
-    const velocity = info.velocity.x;
 
-    if (offset < -DRAG_BUFFER || velocity < -VELOCITY_THRESHOLD) {
-      setCurrentIndex(prev => Math.min(prev + 1, carouselItems.length - 1));
-    } else if (offset > DRAG_BUFFER || velocity > VELOCITY_THRESHOLD) {
-      setCurrentIndex(prev => Math.max(prev - 1, 0));
-    }
-  };
 
-  const dragProps = loop
-    ? {}
-    : { dragConstraints: { left: -trackItemOffset * (carouselItems.length - 1), right: 0 } };
+ 
 
   return (
     <div
@@ -96,13 +85,13 @@ export default function Carousel({
     >
       <motion.div
         className="flex"
-        drag="x"
-        {...dragProps}
+     
+     
         style={{
           gap: `${gap}px`,
           x
         }}
-        onDragEnd={handleDragEnd}
+     
         animate={{ x: -(currentIndex * trackItemOffset) }}
         transition={effectiveTransition}
         onAnimationComplete={handleAnimationComplete}
