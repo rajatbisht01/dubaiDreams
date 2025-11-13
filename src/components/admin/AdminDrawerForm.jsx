@@ -25,7 +25,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 
-const propertyTypes = ["Apartment", "Villa", "Townhouse", "Penthouse"];
+const propertyTypes = ["Apartment", "Villa", "Townhouse", "Commercial", "Off-plan"];
 const categories = ["Buy", "Rent"];
 const statuses = ["active", "pending", "sold", "rented"];
 const furnishingOptions = ["Furnished", "Semi-Furnished", "Unfurnished"];
@@ -55,18 +55,12 @@ const amenitiesList = [
   "Concierge / Housekeeping Services",
 ];
 
-export default function AdminDrawerForm({
-  item,
-  onClose,
-  onSubmitSuccess,
-}) {
+export default function AdminDrawerForm({ item, onClose, onSubmitSuccess }) {
   const formMethods = useForm({ defaultValues: item || {} });
   const { register, handleSubmit, reset, setValue, watch } = formMethods;
 
   const [images, setImages] = useState(
-    item?.images?.map((img) =>
-      typeof img === "string" ? { url: img } : img
-    ) || []
+    item?.images?.map((img) => (typeof img === "string" ? { url: img } : img)) || []
   );
   const [filesToUpload, setFilesToUpload] = useState([]);
 
@@ -75,12 +69,7 @@ export default function AdminDrawerForm({
 
   useEffect(() => {
     reset(item || {});
-    setImages(
-      item?.images?.map((img) =>
-        typeof img === "string" ? { url: img } : img
-      ) || []
-    );
-
+    setImages(item?.images?.map((img) => (typeof img === "string" ? { url: img } : img)) || []);
     if (item?.amenities?.length) setValue("amenities", item.amenities);
     if (item?.furnishing?.length) setValue("furnishing", item.furnishing);
   }, [item, reset, setValue]);
@@ -117,6 +106,10 @@ export default function AdminDrawerForm({
         area_sqft: values.area_sqft ? parseFloat(values.area_sqft) : null,
         bedrooms: values.bedrooms ? parseInt(values.bedrooms) : null,
         bathrooms: values.bathrooms ? parseInt(values.bathrooms) : null,
+        location_lat: values.location_lat ? parseFloat(values.location_lat) : null,
+        location_lng: values.location_lng ? parseFloat(values.location_lng) : null,
+        is_featured: !!values.is_featured,
+        is_verified: !!values.is_verified,
         amenities: selectedAmenities,
         furnishing,
       };
@@ -202,6 +195,11 @@ export default function AdminDrawerForm({
                   <Input {...register("bathrooms")} placeholder="Bathrooms" type="number" />
                 </div>
 
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Input {...register("location_lat")} placeholder="Latitude" type="number" step="0.000001" />
+                  <Input {...register("location_lng")} placeholder="Longitude" type="number" step="0.000001" />
+                </div>
+
                 <div>
                   <Label>Status</Label>
                   <Select onValueChange={(v) => setValue("status", v)} defaultValue={item?.status || ""}>
@@ -210,6 +208,24 @@ export default function AdminDrawerForm({
                       {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Featured & Verified */}
+                <div className="flex gap-6 mt-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={!!watch("is_featured")}
+                      onCheckedChange={(checked) => setValue("is_featured", !!checked)}
+                    />
+                    <span className="text-sm">Featured</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={!!watch("is_verified")}
+                      onCheckedChange={(checked) => setValue("is_verified", !!checked)}
+                    />
+                    <span className="text-sm">Verified</span>
+                  </div>
                 </div>
 
                 {/* Furnishing */}

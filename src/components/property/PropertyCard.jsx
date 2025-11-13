@@ -69,20 +69,20 @@ const PropertyCard = ({
       <div className="relative overflow-hidden">
         {images && images.length > 1 ? (
           // Multiple images - show carousel
-       <Carousel
-  items={images.map(img => ({ url: img.url, alt: img.alt_text || title }))}
-  baseWidth="100%"         // full width of card
-  autoplay={true}
-  autoplayDelay={3000}
-  pauseOnHover={true}
-  loop={true}
-  round={false}            // keep it rectangular like fallback
-  height={256}             // match fallback image h-64 (16rem)
-  gap={0}                  // remove spacing so single image fills area
-/>
-
-
-
+          <Carousel
+            items={images.map((img) => ({
+              url: img.url,
+              alt: img.alt_text || title,
+            }))}
+            baseWidth="100%" // full width of card
+            autoplay={true}
+            autoplayDelay={3000}
+            pauseOnHover={true}
+            loop={true}
+            round={false} // keep it rectangular like fallback
+            height={256} // match fallback image h-64 (16rem)
+            gap={0} // remove spacing so single image fills area
+          />
         ) : (
           // Single image - fallback if images array is empty
           <img
@@ -131,96 +131,118 @@ const PropertyCard = ({
         </div>
       </div>
 
-      {/* Content */}
-      <CardContent className="p-5 flex-1 flex flex-col">
-        {/* Title & Info */}
-        <div className="mb-3">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1">
-              <Badge variant="outline" className="mb-2 text-xs">
-                {type}
-              </Badge>
-              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                {title}
-              </h3>
+      <div className="flex">
+        {/* Content */}
+        <CardContent className="pt-2 px-4 flex-1 flex flex-col">
+          {/* Title & Info */}
+          <div className="mb-1">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1">
+                <Badge variant="outline" className="mb-2 text-xs">
+                  {type}
+                </Badge>
+                <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                  {title}
+                </h3>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center text-muted-foreground mb-3">
-            <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-            <span className="text-sm line-clamp-1">{address}</span>
-          </div>
-
-          {/* Price & Area */}
-          <div className="mb-3">
-            <div className="text-2xl font-bold text-primary">
-              ${price?.toLocaleString()}
+            <div className="flex items-center text-muted-foreground mb-3">
+              <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+              <span className="text-sm line-clamp-1">{address}</span>
             </div>
-            {area_sqft && (
-              <div className="text-sm text-muted-foreground">
-                {area_sqft} sq ft
-              </div>
-            )}
-          </div>
 
-          {/* Specs */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground border-t border-border pt-3">
-            {bedrooms !== undefined && (
-              <div className="flex items-center">
-                <Bed className="h-4 w-4 mr-1" />
-                <span>{bedrooms}</span>
+            {/* Price & Area */}
+            <div className="mb-3">
+              <div className="text-2xl font-bold text-primary">
+                ${price?.toLocaleString()}
               </div>
-            )}
-            {bathrooms !== undefined && (
-              <div className="flex items-center">
-                <Bath className="h-4 w-4 mr-1" />
-                <span>{bathrooms}</span>
-              </div>
-            )}
-            {area_sqft && (
-              <div className="flex items-center">
-                <Ruler className="h-4 w-4 mr-1" />
-                <span>{area_sqft}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Agent Info */}
-        {agent && (
-          <div className="border-t border-border pt-3 mt-auto">
-            <div className="flex items-center justify-between">
-              <Link
-                href={`/agent/${agent.name.toLowerCase().replace(/\s+/g, "-")}`}
-                className="flex items-center gap-2 flex-1 hover:opacity-80 transition-opacity"
-                onClick={(e) => e.stopPropagation()} // prevent triggering card click
-              >
-                <img
-                  src={agent.image || "/placeholder-agent.jpg"}
-                  alt={agent.name}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-foreground truncate">
-                    {agent.name}
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {agent.company}
-                  </div>
+              {area_sqft && (
+                <div className="text-sm text-muted-foreground">
+                  {area_sqft} sq ft
                 </div>
-              </Link>
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost" className="h-8 w-8">
-                  <Phone className="h-4 w-4" />
-                </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8">
-                  <Mail className="h-4 w-4" />
-                </Button>
-              </div>
+              )}
+            </div>
+
+            {/* Specs */}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground border-t border-border ">
+              {bedrooms !== undefined && (
+                <div className="flex items-center">
+                  <Bed className="h-4 w-4 mr-1" />
+                  <span>{bedrooms}</span>
+                </div>
+              )}
+              {bathrooms !== undefined && (
+                <div className="flex items-center">
+                  <Bath className="h-4 w-4 mr-1" />
+                  <span>{bathrooms}</span>
+                </div>
+              )}
+              {area_sqft && (
+                <div className="flex items-center">
+                  <Ruler className="h-4 w-4 mr-1" />
+                  <span>{area_sqft}</span>
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </CardContent>
+
+          {/* Agent Info */}
+          {agent && (
+            <div className="border-t border-border pt-1 mt-auto">
+              <div className="flex items-center justify-between">
+                <Link
+                  href={`/agent/${agent.name
+                    .toLowerCase()
+                    .replace(/\s+/g, "-")}`}
+                  className="flex items-center gap-2 flex-1 hover:opacity-80 transition-opacity"
+                  onClick={(e) => e.stopPropagation()} // prevent triggering card click
+                >
+                  <img
+                    src={agent.image || "/placeholder-agent.jpg"}
+                    alt={agent.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-foreground truncate">
+                      {agent.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {agent.company}
+                    </div>
+                  </div>
+                </Link>
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" className="h-8 w-8">
+                    <Phone className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8">
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+
+        
+          <div className="border-t border-border px-4 py-2">
+            {rest.furnishing && rest.furnishing.length > 0 && (
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                {rest.furnishing.map((furnishedment, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="outline"
+                    className="px-2 py-1 text-[10px]"
+                  >
+                    {furnishedment}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+       
+      </div>
     </Card>
   );
 };

@@ -32,6 +32,8 @@ import {
   Map,
 } from "lucide-react";
 import PropertyCard from "@/components/property/PropertyCard";
+import MapView from "./property/MapView";
+import AnimatedPropertyGrid from "./AnimatedPropertyGrid";
 
 const amenitiesList = [
   "Covered / Secure Parking",
@@ -105,10 +107,11 @@ const PropertiesPage = () => {
   // ✅ Fetch properties
   const fetchProperties = async () => {
     setLoading(true);
+    console.log("Fetching properties with filters:")
     try {
       let query = supabase
         .from("properties")
-        .select("*, agent:profiles(*)")
+        .select("*")
         .eq("deleted", false)
         .eq("status", "active");
 
@@ -136,6 +139,7 @@ const PropertiesPage = () => {
       else query = query.order("is_featured", { ascending: false });
 
       const { data, error } = await query;
+      console.log("Supabase query executed.data :       *****",data,error);
       if (error) throw error;
 
       const formatted = data.map((p) => ({
@@ -363,19 +367,9 @@ const PropertiesPage = () => {
             ) : properties.length === 0 ? (
               <div className="text-center text-lg text-muted-foreground">No properties found.</div>
             ) : viewMode === "map" ? (
-              <div className="text-center text-muted-foreground">Map view not enabled.</div>
+               <MapView properties={properties} />
             ) : (
-              <div
-                className={`grid gap-6 ${
-                  viewMode === "grid"
-                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
-                    : "grid-cols-1"
-                }`}
-              >
-                {properties.map((property) => (
-                  <PropertyCard key={property.id} {...property} />
-                ))}
-              </div>
+             <AnimatedPropertyGrid properties={properties} viewMode={viewMode} />
             )}
           </div>
         </section>

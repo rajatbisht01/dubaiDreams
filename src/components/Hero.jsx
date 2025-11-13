@@ -62,7 +62,7 @@ const Hero = () => {
                 <TabsTrigger value="Rent" className="text-sm">Rent</TabsTrigger>
                 <TabsTrigger value="Buy" className="text-sm">Buy</TabsTrigger>
                 {/* <TabsTrigger value="newProject" className="text-sm">New Projects</TabsTrigger>
-                <TabsTrigger value="commercial" className="text-sm">Commercial</TabsTrigger> */}
+                <TabsTrigger value="Commercial" className="text-sm">Commercial</TabsTrigger> */}
               </TabsList>
 
               <TabsContent value={category} className="mt-0">
@@ -92,7 +92,10 @@ const Hero = () => {
                         <SelectItem value="Villa">Villa</SelectItem>
                         <SelectItem value="Apartment">Apartment</SelectItem>
                         <SelectItem value="Townhouse">Townhouse</SelectItem>
-                        <SelectItem value="Penthouse">Penthouse</SelectItem>
+                        <SelectItem value="Commercial">Commercial</SelectItem>
+
+                        <SelectItem value="Off-plan">Off-plan</SelectItem>
+
                       </SelectContent>
                     </Select>
                   </div>

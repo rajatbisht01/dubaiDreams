@@ -34,21 +34,25 @@ const PropertyDetail = () => {
   const [isSaved, setIsSaved] = useState(false);
 
   // Zustand store
-  const { selectedProperty,fetchAllProperties, fetchPropertyById, allProperties, loading } =
-    usePropertyStore();
-    console.log("allProperties ****************", allProperties )
+  const {
+    selectedProperty,
+    fetchAllProperties,
+    fetchPropertyById,
+    allProperties,
+    loading,
+  } = usePropertyStore();
+  console.log("allProperties ****************", allProperties);
 
-    const [property, setProperty] = useState(null);
-    
-    useEffect(() => {
-      
-      const loadProperty = async () => {
-        if (selectedProperty && selectedProperty.id === id) {
-          setProperty(selectedProperty);
-        } else {
-          const fetched = await fetchPropertyById(id);
-          if (fetched) setProperty(fetched);
-        }
+  const [property, setProperty] = useState(null);
+
+  useEffect(() => {
+    const loadProperty = async () => {
+      if (selectedProperty && selectedProperty.id === id) {
+        setProperty(selectedProperty);
+      } else {
+        const fetched = await fetchPropertyById(id);
+        if (fetched) setProperty(fetched);
+      }
     };
     loadProperty();
   }, [id, selectedProperty]);
@@ -72,51 +76,78 @@ const PropertyDetail = () => {
       </div>
     );
   }
-
   const similarProperties =
-    allProperties?.filter(
-      (p) => p.id !== property.id && p.type === property.type
-    ) || [];
-
-
+  allProperties?.filter(
+    (p) => p.id !== property.id && p.type === property.type
+  ) || [];
+  // console.log("similar properties ****************", allProperties);
+  
   return (
     <div className="min-h-screen bg-background">
-      <main className="pt-16">
+      <main className="">
         {/* 🖼 Image Gallery */}
-        <div className="relative h-[500px] md:h-[600px] bg-black">
-          <img
-            src={property.images?.[currentImage]?.url || "/fallback.jpg"}
-            alt={property.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+         {property.images && property.images.length > 1 ? (
 
-          {/* Controls */}
-          {property.images?.length > 1 && (
-            <>
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white"
-                onClick={prevImage}
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </Button>
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white"
-                onClick={nextImage}
-              >
-                <ChevronRight className="h-6 w-6" />
-              </Button>
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm">
-                {currentImage + 1} / {property.images?.length}
-              </div>
-            </>
-          )}
+          <div className="relative h-[500px] md:h-[600px] bg-black">
+          {(() => {
+            // Normalize images to always be an array
+            const rawImages = property.images;
+            const images = Array.isArray(rawImages)
+              ? rawImages
+              : rawImages
+              ? [rawImages]
+              : [];
+            const total = images.length;
 
-          {/* Action Buttons */}
+            // Safely get current image or fallback
+            const currentImageUrl =
+              total > 0 && images[0]?.url
+                ? images[Math.min(currentImage, total - 1)]?.url
+                : "/fallback.jpg";
+
+            return (
+              <>
+                {/* Main image */}
+                <img
+                  src={currentImageUrl}
+                  alt={property.title || "Property image"}
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+
+                {/* Show controls only when more than 1 image */}
+                {total > 1 && (
+                  <>
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white"
+                      onClick={prevImage}
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </Button>
+
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white"
+                      onClick={nextImage}
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </Button>
+
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm">
+                      {currentImage + 1} / {total}
+                    </div>
+                  </>
+                )}
+              </>
+            );
+          })()}
+
+          {/* ❤️ Action Buttons */}
           <div className="absolute top-4 right-4 flex gap-2">
             <Button
               size="icon"
@@ -125,7 +156,9 @@ const PropertyDetail = () => {
               onClick={() => setIsSaved(!isSaved)}
             >
               <Heart
-                className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : ""}`}
+                className={`h-5 w-5 ${
+                  isSaved ? "fill-primary text-primary" : ""
+                }`}
               />
             </Button>
             <Button
@@ -138,10 +171,19 @@ const PropertyDetail = () => {
           </div>
         </div>
 
+
+         ) :(
+         <img
+            src={property.images?.[0]?.url || "/assets/property-1.jpg"}
+            alt={property.images?.[0]?.alt_text || property.title}
+            className="w-full h-screen object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          )}
+
         {/* 🏠 Property Info */}
         <section className="py-8">
           <div className="container mx-auto px-4 max-w-7xl">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               {/* Left Content */}
               <div className="lg:col-span-2 space-y-6">
                 <div>
@@ -169,7 +211,9 @@ const PropertyDetail = () => {
                       {property.area_sqft && (
                         <div className="text-sm text-muted-foreground">
                           AED{" "}
-                          {Math.round(property.price / property.area_sqft).toLocaleString()}{" "}
+                          {Math.round(
+                            property.price / property.area_sqft
+                          ).toLocaleString()}{" "}
                           / sq ft
                         </div>
                       )}
@@ -207,7 +251,9 @@ const PropertyDetail = () => {
                         <div className="font-semibold">
                           {property.area_sqft?.toLocaleString()} sqft
                         </div>
-                        <div className="text-xs text-muted-foreground">Area</div>
+                        <div className="text-xs text-muted-foreground">
+                          Area
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -301,47 +347,41 @@ const PropertyDetail = () => {
 
               {/* Sidebar */}
               <div className="space-y-6">
-                {property.agent && (
-                  <Card className="top-24">
-                    <CardHeader>
-                      <CardTitle>Contact Agent</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-start gap-4">
-                        <img
-                          src={property.agent.image || "/placeholder-agent.jpg"}
-                          alt={property.agent.name}
-                          className="w-20 h-20 rounded-full object-cover"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">
-                            {property.agent.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {property.agent.company}
-                          </p>
-                        </div>
-                      </div>
+               <Card className="top-24">
+  <CardHeader>
+    <CardTitle>Contact Agent</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    <div className="flex items-start gap-4">
+      <img
+        src="/placeholder-agent.jpg" // replace with your agent's image
+        alt="Agent Name" // replace with your agent's name
+        className="w-20 h-20 rounded-full object-cover"
+      />
+      <div className="flex-1">
+        <h3 className="font-semibold text-lg">Agent Name</h3> {/* replace */}
+        <p className="text-sm text-muted-foreground">Company Name</p> {/* replace */}
+      </div>
+    </div>
 
-                      <form className="space-y-3">
-                        <Input placeholder="Your Name" />
-                        <Input type="email" placeholder="Your Email" />
-                        <Input type="tel" placeholder="Your Phone" />
-                        <Textarea placeholder="Message" rows={4} />
-                        <Button className="w-full bg-primary hover:bg-primary-light">
-                          Send Message
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                )}
+    <form className="space-y-3">
+      <Input placeholder="Your Name" />
+      <Input type="email" placeholder="Your Email" />
+      <Input type="tel" placeholder="Your Phone" />
+      <Textarea placeholder="Message" rows={4} />
+      <Button className="w-full bg-primary hover:bg-primary-light">
+        Send Message
+      </Button>
+    </form>
+  </CardContent>
+</Card>
+
               </div>
             </div>
           </div>
         </section>
       </main>
 
-      <Footer />
     </div>
   );
 };

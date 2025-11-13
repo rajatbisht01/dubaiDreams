@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { usePropertyStore } from "@/store/propertyStore";
-import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import { Button } from "@/components/ui/button";
 import PropertyCard from "@/components/property/PropertyCard";
 import Link from "next/link";
+import AnimatedPropertyGrid from "@/components/AnimatedPropertyGrid";
 
 export default function Home() {
   const { allProperties, fetchAllProperties, loading } = usePropertyStore();
@@ -30,74 +30,79 @@ export default function Home() {
     }
   }, [allProperties]);
 
-  const renderProperties = (properties) =>
-    properties.length
-      ? properties.map((property) => <PropertyCard key={property.id} {...property} />)
-      : <p className="text-center text-muted-foreground">No properties found.</p>;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main>
-        <Hero />
+   <div className="min-h-screen bg-background">
+  <main>
+    <Hero />
 
-        {/* 🏠 Featured Properties */}
-        <section className="p-8 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Featured Properties</h2>
-            </div>
-            {loading ? <p className="text-center text-muted-foreground">Loading properties...</p> :
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-12">
-                {renderProperties(featuredProperties)}
-              </div>
-            }
-            <div className="text-center">
-              <Link href="/properties">
-                <Button size="lg" className="bg-primary hover:bg-primary-light">View All Properties</Button>
-              </Link>
-            </div>
-          </div>
-        </section>
+    {/* 🏠 Featured Properties */}
+    <section className="p-8 bg-background">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Featured Properties</h2>
+          <p className="text-lg text-muted-foreground">Handpicked listings you don't want to miss</p>
+        </div>
+        {loading ? (
+          <p className="text-center text-muted-foreground">Loading properties...</p>
+        ) : (
+          <AnimatedPropertyGrid properties={featuredProperties} viewMode={"grid"} />
+        )}
+        <div className="text-center mt-4">
+          <Link href="/properties">
+            <Button size="lg" className="bg-primary hover:bg-primary-light">
+              View All Properties
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
 
-        {/* 🏡 Properties for Sale */}
-        <section className="p-8 bg-secondary/30">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Properties for Sale</h2>
-            </div>
-            {loading ? <p className="text-center text-muted-foreground">Loading properties...</p> :
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-12">
-                {renderProperties(buyProperties)}
-              </div>
-            }
-            <div className="text-center">
-              <Link href="/properties?category=Buy">
-                <Button size="lg" variant="outline">View All Properties for Sale</Button>
-              </Link>
-            </div>
-          </div>
-        </section>
+    {/* 🏡 Properties for buy */}
+    <section className="p-8 bg-secondary/30">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Properties to buy</h2>
+          <p className="text-lg text-muted-foreground">Find your dream home available for purchase</p>
+        </div>
+        {loading ? (
+          <p className="text-center text-muted-foreground">Loading properties...</p>
+        ) : (
+          <AnimatedPropertyGrid properties={buyProperties} viewMode={"grid"} />
+        )}
+        <div className="text-center mt-4">
+          <Link href="/properties?category=Buy">
+            <Button size="lg" variant="outline">
+              View All Properties to buy
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
 
-        {/* 🏘️ Properties for Rent */}
-        <section className="p-8 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Properties for Rent</h2>
-            </div>
-            {loading ? <p className="text-center text-muted-foreground">Loading properties...</p> :
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-12">
-                {renderProperties(rentProperties)}
-              </div>
-            }
-            <div className="text-center">
-              <Link href="/properties?category=Rent">
-                <Button size="lg" variant="outline">View All Rentals</Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
+    {/* 🏘️ Properties for Rent */}
+    <section className="p-8 bg-background">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Properties for Rent</h2>
+          <p className="text-lg text-muted-foreground">Browse rental homes and apartments available now</p>
+        </div>
+        {loading ? (
+          <p className="text-center text-muted-foreground">Loading properties...</p>
+        ) : (
+          <AnimatedPropertyGrid properties={rentProperties} viewMode={"grid"} />
+        )}
+        <div className="text-center mt-4">
+          <Link href="/properties?category=Rent">
+            <Button size="lg" variant="outline">
+              View All Rentals
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
   );
 }
