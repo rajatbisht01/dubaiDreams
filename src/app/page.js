@@ -72,7 +72,7 @@ export default function Home() {
         )}
         <div className="text-center mt-4">
           <Link href="/properties?category=Buy">
-            <Button size="lg" variant="outline">
+            <Button size="lg" className="bg-primary hover:bg-primary-light">
               View All Properties to buy
             </Button>
           </Link>
@@ -94,7 +94,7 @@ export default function Home() {
         )}
         <div className="text-center mt-4">
           <Link href="/properties?category=Rent">
-            <Button size="lg" variant="outline">
+            <Button size="lg" className="bg-primary hover:bg-primary-light">
               View All Rentals
             </Button>
           </Link>
