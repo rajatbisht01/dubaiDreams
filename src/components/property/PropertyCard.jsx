@@ -37,19 +37,18 @@ const PropertyCard = ({ property }) => {
 
   return (
     <Link href={`/properties/${id}`}>
-      <Card className="group overflow-hidden hover:shadow-luxury transition-all duration-300 cursor-pointer flex flex-col h-full">
+      <Card className="group overflow-hidden w-[92%] hover:shadow-luxury transition-all duration-300 cursor-pointer flex flex-col h-full">
         {/* Image / Carousel */}
-        <div className="relative overflow-hidden aspect-[4/3] h-[250px] md:h-[300px]">
+        <div className="relative overflow-hidden  aspect-[4/3] h-[180px] ">
           {images.length > 1 ? (
             <Carousel
               items={images}
               baseWidth="100%"
-              height={300}
+              height={250}
               autoplay={true}
               autoplayDelay={3000}
               pauseOnHover={true}
               loop={true}
-              round={false}
               gap={0}
             />
           ) : (

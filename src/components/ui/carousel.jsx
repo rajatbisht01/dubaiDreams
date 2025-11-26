@@ -104,12 +104,12 @@ export default function Carousel({
           return (
             <motion.div
               key={index}
-              className={`relative shrink-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing ${round ? 'rounded-full' : 'rounded-[12px]'}`}
+              className={`relative shrink-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing ${round ? 'rounded-none' : 'rounded-none'}`}
               style={{
                 width: `100%`,
                 height: '100%',
                 rotateY,
-                borderRadius: round ? '50%' : '12px',
+                borderRadius: round ? '50%' : '0px',
               }}
               transition={effectiveTransition}
             >
