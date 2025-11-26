@@ -75,10 +75,10 @@ const ContactSection = () => {
             <Sparkles className="w-5 h-5 animate-pulse" />
             <span className="font-bold uppercase text-sm">Property Inquiry</span>
           </div>
-          <h1 className={`text-5xl sm:text-6xl font-black mb-4 ${BRAND_COLORS.textGradient}`}>Find Your Dream Property</h1>
-          <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto">
+          <h1 className={`text-5xl sm:text-6xl font-black mb-4 ${BRAND_COLORS.textGradient}`}>Find Your Dream Property Investment</h1>
+          {/* <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto">
             Whether you want to buy or rent, fill out the form and our team will help you find the perfect property.
-          </p>
+          </p> */}
         </motion.div>
       </section>
 
