@@ -16,7 +16,7 @@ export default function HomePage() {
   useEffect(() => {
     const loadProperties = async () => {
       // Fetch first page with 10 properties (or any number)
-      const properties = await fetchProperties(1, 10);
+      const properties = await fetchProperties(1, 5);
 
       // Filter featured properties
       const featured = properties.filter((p) => p.isFeatured);

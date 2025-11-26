@@ -11,9 +11,9 @@ export default function HeroCarousel({ featuredProperties = [] }) {
     if (!Array.isArray(featuredProperties) || featuredProperties.length === 0) {
       return [{
         image: '/assets/placeholder.jpg',
-        title: 'Unknown Property',
-        price: 'Price N/A',
-        developer: 'Unknown Developer',
+        title: '',
+        price: '',
+        developer: '',
         location: '',
         bedrooms: '-',
         bathrooms: '-',
