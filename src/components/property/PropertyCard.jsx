@@ -1,249 +1,136 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  MapPin,
-  Bed,
-  Bath,
-  Ruler,
-  Heart,
-  Share2,
-  Phone,
-  Mail,
-} from "lucide-react";
-import { usePropertyStore } from "@/store/propertyStore";
-import Carousel from "../ui/carousel";
+import { MapPin, Bed, Bath, Square } from "lucide-react";
+import Carousel from "../ui/carousel"; // import your existing carousel
 
-const PropertyCard = ({
-  id,
-  title,
-  price,
-  images,
-  type,
-  address,
-  area_sqft,
-  bedrooms,
-  bathrooms,
-  is_featured,
-  verified,
-  agent,
-  ...rest
-}) => {
-  const [isSaved, setIsSaved] = useState(false);
-  const { setSelectedProperty } = usePropertyStore();
-  const router = useRouter();
+const PropertyCard = ({ property }) => {
+  if (!property) return null;
 
-  const handleClick = () => {
-    // Save this property globally in Zustand before navigation
-    setSelectedProperty({
-      id,
-      title,
-      price,
-      images,
-      type,
-      address,
-      area_sqft,
-      bedrooms,
-      bathrooms,
-      is_featured,
-      verified,
-      agent,
-      ...rest,
-    });
+  const {
+    id,
+    title = "Untitled Property",
+    starting_price,
+    property_images = [],
+    property_types,
+    communities,
+    bedrooms,
+    bathrooms,
+    size_range,
+    developers,
+    handover,
+    isFeatured,
+    property_status_types,
+    property_views = [],
+  } = property;
 
-    // Navigate to dynamic page
-    router.push(`/properties/${id}`);
-  };
+  const images = property_images.length
+    ? property_images.map((img) => ({ url: img.image_url, alt: title }))
+    : [{ url: "/assets/property-1.jpg", alt: title }];
+
+  const propertyType = property_types?.name || "Unknown Type";
+  const location = communities?.name || "Unknown Location";
+  const developer = developers?.name || "Unknown Developer";
+  const status = property_status_types?.name || "Off-Plan";
 
   return (
-    <Card
-      onClick={handleClick}
-      className="overflow-hidden hover:shadow-large rounded-3xl transition-all duration-300 group h-full flex flex-col cursor-pointer"
-    >
-      {/* Image Section */}
-      <div className="relative overflow-hidden">
-        {images && images.length > 1 ? (
-          // Multiple images - show carousel
-          <Carousel
-            items={images.map((img) => ({
-              url: img.url,
-              alt: img.alt_text || title,
-            }))}
-            baseWidth="100%" // full width of card
-            autoplay={true}
-            autoplayDelay={3000}
-            pauseOnHover={true}
-            loop={true}
-            round={false} // keep it rectangular like fallback
-            height={300} // match fallback image h-64 (16rem)
-            gap={0} // remove spacing so single image fills area
-          />
-        ) : (
-          // Single image - fallback if images array is empty
-          <img
-            src={images?.[0]?.url || "/assets/property-1.jpg"}
-            alt={images?.[0]?.alt_text || title}
-            className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-        )}
-
-        {/* Badges */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
-          {is_featured && (
-            <Badge className="bg-primary hover:bg-primary-light">
-              Featured
-            </Badge>
-          )}
-          {verified && (
-            <Badge className="bg-green-600 hover:bg-green-700">Verified</Badge>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div
-          className="absolute top-4 right-4 flex gap-2"
-          onClick={(e) => e.stopPropagation()} // prevent parent click
-        >
-          <Button
-            size="icon"
-            variant="secondary"
-            className="rounded-full w-10 h-10 bg-white hover:bg-white/90"
-            onClick={() => setIsSaved(!isSaved)}
-          >
-            <Heart
-              className={`h-5 w-5 ${
-                isSaved ? "fill-primary text-primary" : "text-foreground"
-              }`}
+    <Link href={`/properties/${id}`}>
+      <Card className="group overflow-hidden hover:shadow-luxury transition-all duration-300 cursor-pointer flex flex-col h-full">
+        {/* Image / Carousel */}
+        <div className="relative overflow-hidden aspect-[4/3] h-[250px] md:h-[300px]">
+          {images.length > 1 ? (
+            <Carousel
+              items={images}
+              baseWidth="100%"
+              height={300}
+              autoplay={true}
+              autoplayDelay={3000}
+              pauseOnHover={true}
+              loop={true}
+              round={false}
+              gap={0}
             />
-          </Button>
-          <Button
-            size="icon"
-            variant="secondary"
-            className="rounded-full w-10 h-10 bg-white hover:bg-white/90"
-          >
-            <Share2 className="h-5 w-5" />
-          </Button>
+          ) : (
+            <img
+              src={images[0].url}
+              alt={images[0].alt}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          )}
+
+          {/* Status Badge */}
+          {status && (
+            <div className="absolute top-4 right-4 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-semibold">
+              {status}
+            </div>
+          )}
+
+          {/* Hover Gradient */}
+          <div className="absolute inset-0 bg-gradient-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
-      </div>
 
-      <div className="flex">
         {/* Content */}
-        <CardContent className="pt-2 px-4 flex-1 flex flex-col">
-          {/* Title & Info */}
-          <div className="mb-1">
+        <div className="p-4 flex-1 flex flex-col justify-between">
+          {/* Title & Price */}
+          <div>
             <div className="flex items-start justify-between mb-2">
-              <div className="flex-1">
-                <Badge variant="outline" className="mb-2 text-xs">
-                  {type}
-                </Badge>
-                <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                  {title}
-                </h3>
-              </div>
+              <h3 className="font-serif text-xl font-semibold text-foreground group-hover:text-accent transition-colors line-clamp-1">
+                {title}
+              </h3>
+              <p className="font-bold text-accent text-lg">
+                {starting_price ? `AED ${Number(starting_price).toLocaleString()}` : "Price N/A"}
+              </p>
             </div>
 
-            <div className="flex items-center text-muted-foreground mb-3">
-              <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-              <span className="text-sm line-clamp-1">{address}</span>
-            </div>
-
-            {/* Price & Area */}
-            <div className="mb-3">
-              <div className="text-2xl font-bold text-primary">
-                ${price?.toLocaleString()}
-              </div>
-              {area_sqft && (
-                <div className="text-sm text-muted-foreground">
-                  {area_sqft} sq ft
-                </div>
+            {/* Location & Type */}
+            <div className="flex items-center text-muted-foreground mb-4">
+              <MapPin className="h-4 w-4 mr-1" />
+              <span className="text-sm">{location}</span>
+              {propertyType && (
+                <Badge variant="outline" className="ml-2 text-xs">{propertyType}</Badge>
               )}
             </div>
 
             {/* Specs */}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground border-t border-border ">
-              {bedrooms !== undefined && (
-                <div className="flex items-center">
-                  <Bed className="h-4 w-4 mr-1" />
-                  <span>{bedrooms}</span>
-                </div>
-              )}
-              {bathrooms !== undefined && (
-                <div className="flex items-center">
-                  <Bath className="h-4 w-4 mr-1" />
-                  <span>{bathrooms}</span>
-                </div>
-              )}
-              {area_sqft && (
-                <div className="flex items-center">
-                  <Ruler className="h-4 w-4 mr-1" />
-                  <span>{area_sqft}</span>
-                </div>
-              )}
+            <div className="flex items-center space-x-4 mb-4 text-sm text-muted-foreground">
+              {bedrooms && <div className="flex items-center"><Bed className="h-4 w-4 mr-1" />{bedrooms}</div>}
+              {bathrooms && <div className="flex items-center"><Bath className="h-4 w-4 mr-1" />{bathrooms}</div>}
+              {size_range && <div className="flex items-center"><Square className="h-4 w-4 mr-1" />{size_range} sq ft</div>}
             </div>
-          </div>
 
-          {/* Agent Info */}
-          {agent && (
-            <div className="border-t border-border pt-1 mt-auto">
-              <div className="flex items-center justify-between">
-                <Link
-                  href={`/agent/${agent.name
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}`}
-                  className="flex items-center gap-2 flex-1 hover:opacity-80 transition-opacity"
-                  onClick={(e) => e.stopPropagation()} // prevent triggering card click
-                >
-                  <img
-                    src={agent.image || "/placeholder-agent.jpg"}
-                    alt={agent.name}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground truncate">
-                      {agent.name}
-                    </div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {agent.company}
-                    </div>
-                  </div>
-                </Link>
-                <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8">
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8">
-                    <Mail className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-
-        
-          <div className="border-t border-border px-4 py-2">
-            {rest.furnishing && rest.furnishing.length > 0 && (
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                {rest.furnishing.map((furnishedment, idx) => (
-                  <Badge
-                    key={idx}
-                    variant="outline"
-                    className="px-2 py-1 text-[10px]"
-                  >
-                    {furnishedment}
-                  </Badge>
+            {/* Views */}
+            {property_views.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {property_views.map((v, idx) => (
+                  <Badge key={idx} variant="outline" className="px-2 py-1 text-[10px]">{v.view?.name}</Badge>
                 ))}
               </div>
             )}
           </div>
-       
-      </div>
-    </Card>
+
+          {/* Developer & Handover */}
+          <div className="flex items-center justify-between text-sm pt-4 border-t border-border">
+            <span className="text-muted-foreground">
+              <span className="font-medium text-foreground">Developer:</span> {developer}
+            </span>
+            {handover && (
+              <span className="text-muted-foreground">
+                <span className="font-medium text-foreground">Handover:</span> {handover}
+              </span>
+            )}
+          </div>
+
+          {/* Featured Badge */}
+          {isFeatured && (
+            <div className="mt-2">
+              <Badge className="bg-primary hover:bg-primary-light">Featured</Badge>
+            </div>
+          )}
+        </div>
+      </Card>
+    </Link>
   );
 };
 

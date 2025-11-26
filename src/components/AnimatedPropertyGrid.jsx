@@ -19,17 +19,18 @@ const AnimatedGridItem = ({ children, index }) => {
 };
 
 const AnimatedPropertyGrid = ({ properties, viewMode = "grid" }) => {
+  console.log("AnimatedPropertyGrid received properties:", properties);
   return (
     <div
       className={`grid gap-6 ${
         viewMode === "grid"
-          ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
           : "grid-cols-1"
       }`}
     >
       {properties.map((property, index) => (
         <AnimatedGridItem key={property.id} index={index}>
-          <PropertyCard {...property} />
+          <PropertyCard property={property} />
         </AnimatedGridItem>
       ))}
     </div>

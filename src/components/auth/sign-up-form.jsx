@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function SignUpForm({ className, ...props }) {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -30,6 +31,12 @@ export function SignUpForm({ className, ...props }) {
     setIsLoading(true);
     setError(null);
 
+    if (!fullName.trim()) {
+      setError("Full name is required");
+      setIsLoading(false);
+      return;
+    }
+
     if (password !== repeatPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
@@ -41,20 +48,25 @@ export function SignUpForm({ className, ...props }) {
         email,
         password,
         options: {
+          data: {
+            full_name: fullName,
+          },
           emailRedirectTo: `${window.location.origin}/auth/login`,
         },
       });
+
       if (error) throw error;
-        // Call your API to insert the user into your table
-  await fetch("/api/users/handle-new", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      id: data.user?.id,
-      email: data.user?.email,
-      name: data.user?.user_metadata?.full_name || data.user?.user_metadata?.name || "",
-    }),
-  });
+
+      await fetch("/api/users/handle-new", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: data.user?.id,
+          email: data.user?.email,
+          full_name: fullName,
+        }),
+      });
+
       router.push("/auth/login");
     } catch (error) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -65,7 +77,7 @@ export function SignUpForm({ className, ...props }) {
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-            <Card className="p-8 text-white bg-gradient-to-r from-[hsl(195,85%,45%)] to-[hsl(160,60%,50%)] shadow-xl rounded-2xl hover:shadow-2xl transition-shadow duration-300">
+      <Card className="p-8 text-white bg-gradient-to-r from-[hsl(195,85%,45%)] to-[hsl(160,60%,50%)] shadow-xl rounded-2xl hover:shadow-2xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="text-2xl">Sign up</CardTitle>
           <CardDescription>Create a new account</CardDescription>
@@ -73,6 +85,20 @@ export function SignUpForm({ className, ...props }) {
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
+              
+              <div className="grid gap-2">
+                <Label htmlFor="full_name">Full Name</Label>
+                <Input
+                  id="full_name"
+                  type="text"
+                  placeholder="John Doe"
+                  className="text-black"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -84,34 +110,45 @@ export function SignUpForm({ className, ...props }) {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
                   required
+                  className="text-black"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="repeat-password">Repeat Password</Label>
                 <Input
                   id="repeat-password"
                   type="password"
                   required
+                  className="text-black"
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
+
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full ring bg-brand hover:bg-brand" disabled={isLoading}>
+
+              <Button
+                type="submit"
+                className="w-full ring bg-brand hover:bg-brand"
+                disabled={isLoading}
+              >
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
             </div>
+
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
-              <Link href="/auth/login" className="underline  underline-offset-4">
+              <Link href="/auth/login" className="underline underline-offset-4">
                 Login
               </Link>
             </div>

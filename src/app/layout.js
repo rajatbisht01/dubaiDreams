@@ -21,7 +21,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={` ${geistSans.variable} ${geistMono.variable}`}>
+      <body className={` ${geistSans.variable} ${geistMono.variable}  `}>
         <Navigation/>
         <div className="pt-20  bg-bg-dark">
         {children}

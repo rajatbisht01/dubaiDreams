@@ -1,51 +1,44 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import AdminDrawerForm from "@/components/admin/AdminDrawerForm";
 import PropertyGrid from "@/components/property/PropertyGrid";
 import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
-
-const tabs = ["property"];
-const tableMap = { property: "properties", blogs: "blogs" };
+import PropertyStepperForm from "@/components/admin/PropertyStepperForm";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const AdminPage = () => {
-  const [activeTab, setActiveTab] = useState("property");
   const [items, setItems] = useState([]);
   const [drawerItem, setDrawerItem] = useState(null);
-  const [deleteId, setDeleteId] = useState(null); // Track which property to delete
+  const [deleteId, setDeleteId] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Load list
   const fetchData = async () => {
     try {
-      const table = tableMap[activeTab];
-      const { data, error } = await supabase.from(table).select("*").eq("deleted", false);
-      if (error) throw error;
-      setItems(data || []);
+      const res = await fetch("/api/admin/properties", { method: "GET" });
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error("Invalid data");
+      setItems(data);
     } catch (err) {
-      console.error("[AdminPage] Fetch error:", err);
+      console.error("[AdminPage] fetchData error:", err);
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, []);
 
-  // Opens the confirm dialog
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setShowConfirm(true);
   };
 
-  // Performs actual delete
   const handleConfirmDelete = async () => {
     try {
-      const res = await fetch("/api/properties/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: deleteId }),
+      const res = await fetch(`/api/admin/properties/${deleteId}`, {
+        method: "DELETE",
       });
-
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
 
@@ -61,52 +54,57 @@ const AdminPage = () => {
 
   return (
     <div className="p-8">
-      {/* Tabs */}
-      <div className="flex space-x-4 mb-6">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded ${activeTab === tab ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </div>
 
-      {/* Add button */}
+      {/* Add Property */}
       <div className="mb-4">
-        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setDrawerItem({})}>
-          Add {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+          onClick={() => setDrawerItem({})}
+        >
+          Add Property
         </button>
       </div>
 
-      {/* Property grid */}
+      {/* Grid */}
       <PropertyGrid
         properties={items}
-        type={activeTab}
+        type="property"
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
         isAdmin={true}
       />
 
-      {/* Form drawer */}
-      {drawerItem && (
-        <AdminDrawerForm
-          tableName={tableMap[activeTab]}
-          item={drawerItem?.id ? drawerItem : null}
-          onClose={() => setDrawerItem(null)}
-          onSubmitSuccess={fetchData}
-        />
-      )}
+    {/* Stepper Form */}
+{drawerItem && (
+  <Dialog className="" open={!!drawerItem} onOpenChange={() => setDrawerItem(null)}>
+    <DialogContent className="max-w-4xl bg-white w-full">
+      <DialogHeader>
+        <DialogTitle className="text-2xl font-bold text-center">
+          {drawerItem.id ? "Edit Property" : "Create New Property"}
+        </DialogTitle>
+        {/* <DialogDescription>
+          Fill in all steps to save the property.
+        </DialogDescription> */}
+      </DialogHeader>
 
-      {/* Delete confirmation dialog */}
+      <PropertyStepperForm
+        item={drawerItem?.id ? drawerItem : null}
+        onClose={() => setDrawerItem(null)}
+        onSuccess={fetchData}
+      />
+    </DialogContent>
+  </Dialog>
+)}
+
+
+
+      {/* Confirm delete */}
       <ConfirmDeleteDialog
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Property"
-        description="Are you sure you want to delete this property? This action cannot be undone."
+        description="Are you sure you want to delete this property?"
       />
     </div>
   );

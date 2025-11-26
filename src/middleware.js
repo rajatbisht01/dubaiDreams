@@ -42,7 +42,7 @@ export async function middleware(request) {
   // Fetch role from public.profiles
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role")
+    .select("*")
     .eq("id", user.id)
     .single();
 
