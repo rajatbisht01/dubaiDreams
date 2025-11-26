@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function HeroCarousel({ featuredProperties = [] }) {
   // Build slides: one per property, first image only
@@ -17,6 +18,7 @@ export default function HeroCarousel({ featuredProperties = [] }) {
         location: '',
         bedrooms: '-',
         bathrooms: '-',
+        id:'-'
       }];
     }
 
@@ -28,6 +30,7 @@ export default function HeroCarousel({ featuredProperties = [] }) {
       location: property.communities?.name ?? '',
       bedrooms: property.bedrooms ?? '-',
       bathrooms: property.bathrooms ?? '-',
+      id: property.id ?? '_'
     }));
   }, [featuredProperties]);
 
@@ -67,12 +70,14 @@ export default function HeroCarousel({ featuredProperties = [] }) {
     <p className="text-xl lg:text-2xl text-white/90 mb-6">
       Your gateway to off-plan projects, zero commission & flexible payment plans.
     </p>
+    <Link href={`/properties/${slide.id}`}>
+   
     <Button
-      className="bg-primary text-white px-6 py-4 rounded-xl text-lg w-max pointer-events-auto"
-      onClick={() => document.getElementById('properties')?.scrollIntoView({ behavior: "smooth" })}
+      className="bg-primary hover:bg-black text-white px-6 py-4 rounded-xl text-lg w-max pointer-events-auto"
     >
-      Know More
+    Know More
     </Button>
+     </Link>
   </div>
 
   {/* Background Carousel */}
