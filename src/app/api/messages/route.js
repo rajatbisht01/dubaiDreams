@@ -1,12 +1,12 @@
 // app/api/messages/route.ts
 import { NextResponse } from "next/server";
-import { getServerSupabase } from "@/lib/supabaseServer";
+import { supabaseServer } from "@/lib/supabaseServer";
 
 export async function POST(req) {
   try {
     const body = await req.json();
     const { property_id, name, email, phone, message } = body;
-    const supabase = getServerSupabase();
+    const supabase = await supabaseServer();
 
     const { data, error } = await supabase
       .from("user_messages")

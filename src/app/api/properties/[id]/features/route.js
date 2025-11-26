@@ -1,10 +1,10 @@
 // app/api/properties/[id]/amenities/route.ts
 import { NextResponse } from "next/server";
-import { getServerSupabase } from "@/lib/supabaseServer";
+import { supabaseServer } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function POST(req, { params }) {
-  const supabase = getServerSupabase();
+  const supabase = await supabaseServer();
   const { id: propertyId } = params;
   try {
     const body = await req.json(); // { feature_id }
