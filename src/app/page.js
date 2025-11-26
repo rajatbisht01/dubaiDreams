@@ -7,6 +7,7 @@ import { Award,Shield ,TrendingUp, Users } from "lucide-react";
 import AnimatedPropertyGrid from "@/components/AnimatedPropertyGrid";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import Hero from "@/components/Hero";
 
 export default function HomePage() {
   const { allProperties, caroueselProperties, fetchProperties, loading } = usePropertyStore();
@@ -28,13 +29,13 @@ export default function HomePage() {
   console.log("all caroueselProperties:", caroueselProperties);
 
  return (
-    <>
+    <div className="flex flex-col ">
       {/* Hero Carousel with featured properties */}
       <HeroCarousel featuredProperties={featuredProperties} />
 
-    {/* <Hero /> */}
 
-     <section className="py-20 bg-muted/30">
+  
+     <section className="p-8 bg-muted/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
               <h2 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -80,12 +81,33 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-
+  <Hero />
     {/* 🏠 all Properties */}
-    <section className="p-8 bg-background">
+    <section className=" bg-background my-8">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Off-Plan Properties</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Featured Off-Plan Properties</h2>
+          <p className="text-lg text-muted-foreground">Handpicked listings you don't want to miss</p>
+        </div>
+        {loading ? (
+          <p className="text-center text-muted-foreground">Loading properties...</p>
+        ) : (
+          <AnimatedPropertyGrid properties={featuredProperties} viewMode={"grid"} />
+        )}
+        <div className="text-center mt-4">
+          <Link href="/properties">
+            <Button size="lg" className="bg-primary hover:bg-primary-light">
+              View All Properties
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+
+   <section className=" bg-background mb-12">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Explore All Properties</h2>
           <p className="text-lg text-muted-foreground">Handpicked listings you don't want to miss</p>
         </div>
         {loading ? (
@@ -102,10 +124,8 @@ export default function HomePage() {
         </div>
       </div>
     </section>
-
-  
  
-</>
+</div>
 
   );
 }

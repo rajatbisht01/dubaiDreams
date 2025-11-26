@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Home, DollarSign, Building } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, MapPin, Home, DollarSign, Building, TrendingUp } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,140 +13,256 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePropertyStore } from "@/store/propertyStore";
 
 const Hero = () => {
   const router = useRouter();
-  const [category, setCategory] = useState("Rent");
-  const [location, setLocation] = useState("");
-  const [propertyType, setPropertyType] = useState("");
-  const [beds, setBeds] = useState("");
+  
+  const {
+    propertyTypes,
+    categories,
+    communities,
+    fetchFilters
+  } = usePropertyStore();
+
+  const [search, setSearch] = useState("");
+  const [propertyType, setPropertyType] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [community, setCommunity] = useState("all");
+  const [beds, setBeds] = useState("any");
+
+  // Load filters on mount
+  useEffect(() => {
+    fetchFilters();
+  }, []);
 
   const handleSearch = () => {
     // Build query string dynamically
     const params = new URLSearchParams();
-    if (category) params.append("category", category);
-    if (location) params.append("location", location);
-    if (propertyType) params.append("propertyType", propertyType);
-    if (beds) params.append("beds", beds);
+    
+    if (search) params.append("search", search);
+    if (propertyType !== "all") params.append("propertyType", propertyType);
+    if (status !== "all") params.append("category", status);
+    if (community !== "all") params.append("community", community);
+    if (beds !== "any") params.append("beds", beds);
 
     router.push(`/properties?${params.toString()}`);
   };
 
+  // Handle Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   return (
-    <section className="relative h-[650px] flex items-center">
-      <div className="absolute inset-0">
+    <section className="relative my-8 flex items-center bg-transparent">
+      {/* Optional Background Image - Uncomment if needed */}
+      {/* <div className="absolute inset-0 opacity-80">
         <Image
-          src={"/assets/hero-image.jpg"}
+          src="/assets/hero-image.jpg"
           alt="Dubai Properties"
           fill
           className="object-cover"
-          style={{ filter: "brightness(0.6)" }}
           priority
         />
-      </div>
+      </div> */}
 
-      <div className="relative container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 text-center animate-in fade-in duration-700">
-            Your home search starts here
-          </h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-8 text-center animate-in fade-in duration-700 delay-100">
-            Find properties to rent, buy or invest
-          </p>
+      <div className="relative container mx-auto px-4 py-2">
+        <div className="max-w-5xl mx-auto">
+          {/* Hero Text */}
+          <div className="text-center mb-8 animate-in fade-in duration-700">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-black">
+              Find Your Dream Property in Dubai
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Discover exclusive off-plan and ready properties from top developers
+            </p>
+          </div>
 
-          <div className="bg-white rounded-xl p-2 shadow-large animate-in fade-in duration-700 delay-200">
-            {/* ✅ Use correct state for Tabs */}
-            <Tabs value={category} onValueChange={setCategory} className="p-2">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="Rent" className="text-sm">Rent</TabsTrigger>
-                <TabsTrigger value="Buy" className="text-sm">Buy</TabsTrigger>
-                {/* <TabsTrigger value="newProject" className="text-sm">New Projects</TabsTrigger>
-                <TabsTrigger value="Commercial" className="text-sm">Commercial</TabsTrigger> */}
-              </TabsList>
-
-              <TabsContent value={category} className="mt-0">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 p-2">
-                  {/* Location Input */}
-                  <div className="md:col-span-5">
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                      <Input
-                        type="text"
-                        placeholder="City, community or building"
-                        className="pl-10 h-12 bg-secondary border-0"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Property Type */}
-                  <div className="md:col-span-3">
-                    <Select value={propertyType} onValueChange={setPropertyType}>
-                      <SelectTrigger className="h-12 border-0">
-                        <SelectValue placeholder="Property type" />
-                      </SelectTrigger>
-                      <SelectContent className="z-50">
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="Villa">Villa</SelectItem>
-                        <SelectItem value="Apartment">Apartment</SelectItem>
-                        <SelectItem value="Townhouse">Townhouse</SelectItem>
-                        <SelectItem value="Commercial">Commercial</SelectItem>
-
-                        <SelectItem value="Off-plan">Off-plan</SelectItem>
-
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Beds */}
-                  <div className="md:col-span-2">
-                    <Select value={beds} onValueChange={setBeds}>
-                      <SelectTrigger className="h-12 border-0">
-                        <SelectValue placeholder="Beds & Baths" />
-                      </SelectTrigger>
-                      <SelectContent className="z-50">
-                        <SelectItem value="any">Any</SelectItem>
-                        <SelectItem value="1">1+ Bed</SelectItem>
-                        <SelectItem value="2">2+ Beds</SelectItem>
-                        <SelectItem value="3">3+ Beds</SelectItem>
-                        <SelectItem value="4">4+ Beds</SelectItem>
-                        <SelectItem value="5">5+ Beds</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Search Button */}
-                  <div className="md:col-span-2">
-                    <Button
-                      onClick={handleSearch}
-                      className="w-full h-12 bg-primary hover:bg-primary-light text-white font-semibold"
-                    >
-                      <Search className="mr-2 h-5 w-5" />
-                      Search
-                    </Button>
+          {/* Search Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-2xl border animate-in fade-in duration-700 delay-100">
+            <div className="space-y-4">
+              {/* Main Search Row */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                {/* Search Input */}
+                <div className="md:col-span-6">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search by location, community, or developer..."
+                      className="pl-10 h-12 bg-background"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                    />
                   </div>
                 </div>
-              </TabsContent>
-            </Tabs>
+
+                {/* Property Type */}
+                <div className="md:col-span-3">
+                  <Select value={propertyType} onValueChange={setPropertyType}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Property Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      {propertyTypes?.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Search Button */}
+                <div className="md:col-span-3">
+                  <Button
+                    onClick={handleSearch}
+                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base"
+                    size="lg"
+                  >
+                    <Search className="mr-2 h-5 w-5" />
+                    Search
+                  </Button>
+                </div>
+              </div>
+
+              {/* Additional Filters Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Status */}
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    {categories?.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Community */}
+                <Select value={community} onValueChange={setCommunity}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Community" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Communities</SelectItem>
+                    {communities?.slice(0, 20).map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Bedrooms */}
+                <Select value={beds} onValueChange={setBeds}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Bedrooms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any Bedrooms</SelectItem>
+                    <SelectItem value="Studio">Studio</SelectItem>
+                    <SelectItem value="1">1 Bedroom</SelectItem>
+                    <SelectItem value="2">2 Bedrooms</SelectItem>
+                    <SelectItem value="3">3 Bedrooms</SelectItem>
+                    <SelectItem value="4">4 Bedrooms</SelectItem>
+                    <SelectItem value="5+">5+ Bedrooms</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Quick Links */}
+              {/* <div className="flex flex-wrap gap-2 pt-2">
+                <span className="text-sm text-muted-foreground mr-2">Popular:</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    setCommunity(communities?.find(c => c.name.toLowerCase().includes("marina"))?.id || "all");
+                    handleSearch();
+                  }}
+                >
+                  Dubai Marina
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    setCommunity(communities?.find(c => c.name.toLowerCase().includes("downtown"))?.id || "all");
+                    handleSearch();
+                  }}
+                >
+                  Downtown Dubai
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    setPropertyType(propertyTypes?.find(t => t.name.toLowerCase().includes("villa"))?.id || "all");
+                    handleSearch();
+                  }}
+                >
+                  Villas
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    setStatus(categories?.find(c => c.name.toLowerCase().includes("off"))?.id || "all");
+                    handleSearch();
+                  }}
+                >
+                  Off-Plan
+                </Button>
+              </div> */}
+            </div>
           </div>
 
           {/* Stats Section */}
-          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 animate-in fade-in duration-700 delay-300">
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 animate-in fade-in duration-700 delay-200">
             {[
-              { icon: Home, value: "50,000+", label: "Properties" },
-              { icon: Building, value: "5,000+", label: "Agents" },
-              { icon: DollarSign, value: "$5B+", label: "Worth Listed" },
-              { icon: Search, value: "1M+", label: "Monthly Searches" },
-            ].map(({ icon: Icon, value, label }) => (
-              <div key={label} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                  <Icon className="h-6 w-6 text-white" />
+              { icon: Home, value: "500+", label: "Properties", color: "text-blue-500" },
+              { icon: Building, value: "50+", label: "Developers", color: "text-purple-500" },
+              { icon: DollarSign, value: "AED 5B+", label: "Worth Listed", color: "text-green-500" },
+              { icon: TrendingUp, value: "15%", label: "Avg. ROI", color: "text-orange-500" },
+            ].map(({ icon: Icon, value, label, color }) => (
+              <div key={label} className="text-center group">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-secondary/50 backdrop-blur-sm mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <Icon className={`h-7 w-7 ${color}`} />
                 </div>
-                <div className="text-2xl font-bold text-white">{value}</div>
-                <div className="text-sm text-white/80">{label}</div>
+                <div className="text-2xl md:text-3xl font-bold mb-1">{value}</div>
+                <div className="text-sm text-muted-foreground">{label}</div>
               </div>
             ))}
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-green-500"></div>
+              <span>Verified Listings</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+              <span>Trusted Developers</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+              <span>Expert Support</span>
+            </div>
           </div>
         </div>
       </div>

@@ -23,7 +23,7 @@ const ContactSection = () => {
     lastName: "",
     email: "",
     phone: "",
-    propertyType: "buy",
+    // propertyType: "buy",
     location: "",
     budget: "",
     bedrooms: "",
@@ -49,7 +49,7 @@ const ContactSection = () => {
           lastName: "",
           email: "",
           phone: "",
-          propertyType: "buy",
+          // propertyType: "buy",
           location: "",
           budget: "",
           bedrooms: "",
@@ -69,7 +69,7 @@ const ContactSection = () => {
   return (
     <div className="w-full bg-gray-50">
       {/* Hero Section */}
-      <section className="text-center pt-20 px-6 sm:px-12 lg:px-24">
+      <section className="text-center pt-12 px-6 sm:px-12 lg:px-24">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div className={`inline-flex items-center gap-2 px-6 py-3 rounded-full mb-6 bg-gradient-to-r ${BRAND_COLORS.gradient1} text-white`}>
             <Sparkles className="w-5 h-5 animate-pulse" />
@@ -122,33 +122,10 @@ const ContactSection = () => {
                 />
 
                 {/* Property Type */}
-                <div className="flex  items-center gap-6">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="propertyType"
-                      value="buy"
-                      checked={formData.propertyType === "buy"}
-                      onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
-                      className="accent-blue-600"
-                    />
-                    Buy
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="propertyType"
-                      value="rent"
-                      checked={formData.propertyType === "rent"}
-                      onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
-                      className="accent-blue-600"
-                    />
-                    Rent
-                  </label>
-                </div>
+                
 
                 {/* Property Details */}
-                <Input
+                {/* <Input
                   placeholder="Location *"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
@@ -164,7 +141,7 @@ const ContactSection = () => {
                   placeholder="Bedrooms"
                   value={formData.bedrooms}
                   onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
-                />
+                /> */}
 
                 {/* Message */}
                 <Textarea

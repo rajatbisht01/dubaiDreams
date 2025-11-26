@@ -30,7 +30,7 @@ const values = [
     title: "Luxury & Excellence",
     description:
       "We specialize in Dubai’s most prestigious properties — iconic towers, waterfront homes, and luxury residences. Experience service that matches the lifestyle.",
-    gradient: "from-primary-dark to-secondary-dark",
+    gradient: "from-primary to-secondary",
   },
 ];
 
@@ -38,7 +38,7 @@ const About = () => {
   return (
     <div className="min-h-screen font-sans">
       {/* Hero Section */}
-      <section className="relative pt-20 px-6 sm:px-12 lg:px-24 overflow-hidden bg-gradient-to-br from-gray-50 to-white">
+      {/* <section className="relative pt-20 px-6 sm:px-12 lg:px-24 overflow-hidden bg-gradient-to-br from-gray-50 to-white">
         <div className="absolute inset-0 opacity-10 bg-gradient-to-r from-primary/10 via-white to-secondary/10" />
         <div className="container mx-auto relative z-10 text-center max-w-4xl">
           <motion.span
@@ -66,10 +66,10 @@ const About = () => {
             We combine local expertise with global experience to help clients buy, sell, and invest in Dubai’s most prestigious locations. Your dream home is just a journey away.
           </motion.p>
         </div>
-      </section>
+      </section> */}
 
       {/* Values Section */}
-      <section className="py-20 px-6 sm:px-12 lg:px-24 bg-gradient-to-t from-white via-gray-50 to-white">
+      <section className="py-12 px-6 sm:px-12 lg:px-24 bg-gradient-to-t from-white via-gray-50 to-white">
         <div className="container mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -100,7 +100,7 @@ const About = () => {
                 className="bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300"
               >
                 <div className={`flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br ${value.gradient} mb-6 shadow-lg`}>
-                  <value.icon className="w-10 h-10 text-white" />
+                  <value.icon className="w-10 h-10 text-black" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{value.title}</h3>
                 <p className="text-gray-700 leading-relaxed">{value.description}</p>
