@@ -10,28 +10,24 @@ import { Button } from "@/components/ui/button";
 import Hero from "@/components/Hero";
 
 export default function HomePage() {
-  const { allProperties, caroueselProperties, fetchProperties, loading } = usePropertyStore();
-  const [featuredProperties, setFeaturedProperties] = useState([]);
+  const { allProperties, carouselProperties, featuredProperties,fetchFeaturedProperties, fetchCarouselProperties, fetchProperties, loading } = usePropertyStore();
 
-  useEffect(() => {
-    const loadProperties = async () => {
-      // Fetch first page with 10 properties (or any number)
-      const properties = await fetchProperties(1, 5);
-
-      // Filter featured properties
-      const featured = properties.filter((p) => p.isFeatured);
-      setFeaturedProperties(featured);
-    };
-
-    loadProperties();
-  }, [fetchProperties]);
- console.log("Featured Properties:", featuredProperties);
-  console.log("all caroueselProperties:", caroueselProperties);
+useEffect(() => {
+  ( () => {
+    fetchCarouselProperties();
+     fetchProperties();
+    fetchFeaturedProperties();
+  })();
+}, []);
+ 
+  
+  console.log("Featured Properties:", featuredProperties);
+  console.log("all caroueselProperties:", carouselProperties);
 
  return (
     <div className="flex flex-col ">
       {/* Hero Carousel with featured properties */}
-      <HeroCarousel featuredProperties={featuredProperties} />
+      <HeroCarousel featuredProperties={carouselProperties} />
 
 
   
@@ -82,7 +78,7 @@ export default function HomePage() {
           </div>
         </section>
   <Hero />
-    {/* 🏠 all Properties */}
+    {/* 🏠 featured Properties */}
     <section className=" bg-background my-8">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">

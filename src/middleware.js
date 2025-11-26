@@ -50,7 +50,7 @@ export async function middleware(request) {
   console.log("🛂 [middleware] User role:", profile);
 
   // Role-based access control
-  if (path.startsWith("/admin") && role !== "admin") {
+  if (path.startsWith("/admin") && !["admin", "superAdmin"].includes(role) ) {
     const url = request.nextUrl.clone();
     url.pathname = "/unauthorized"; // create a simple unauthorized page
     return NextResponse.redirect(url);

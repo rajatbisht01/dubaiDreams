@@ -98,7 +98,7 @@ export const usePropertyStore = create((set, get) => ({
   fetchFeaturedProperties: async () => {
     set({ loading: true });
     try {
-      const res = await fetch("/api/properties?isFeatured=true&limit=20");
+      const res = await fetch("/api/properties?page=1&isFeatured=true&limit=12");
       const data = await res.json();
       set({ featuredProperties: data?.data?.items || [] });
       return data?.data?.items || [];
@@ -110,19 +110,41 @@ export const usePropertyStore = create((set, get) => ({
     }
   },
 
-  /* ---------------------- FETCH CAROUSEL ---------------------- */
-  fetchCarouselProperties: async () => {
-    set({ loading: true });
+ /* ---------------------- FETCH CAROUSEL WITH LOCALSTORAGE CACHE ---------------------- */
+fetchCarouselProperties: async () => {
+  const local = localStorage.getItem("carouselProperties");
+
+  // If cached → load instantly (no flicker)
+  if (local) {
     try {
-      const res = await fetch("/api/properties?sortBy=created_at&sortDir=desc&limit=5");
-      const data = await res.json();
-      set({ carouselProperties: data?.data?.items || [] });
-      return data?.data?.items || [];
-    } catch (err) {
-      console.error("[PropertyStore] fetchCarouselProperties error:", err);
-      return [];
-    } finally {
-      set({ loading: false });
-    }
-  },
+      const parsed = JSON.parse(local);
+      set({ carouselProperties: parsed });
+    } catch {}
+  }
+
+  // Fetch latest from API (background fetch)
+  set({ loading: true });
+  try {
+    const res = await fetch(
+      "/api/properties?page=1&isFeatured=true&sortBy=created_at&sortDir=desc&limit=5"
+    );
+    const data = await res.json();
+
+    const items = data?.data?.items || [];
+
+    // Save to zustand
+    set({ carouselProperties: items });
+
+    // Update localStorage
+    localStorage.setItem("carouselProperties", JSON.stringify(items));
+
+    return items;
+  } catch (err) {
+    console.error("[PropertyStore] fetchCarouselProperties error:", err);
+    return [];
+  } finally {
+    set({ loading: false });
+  }
+},
+
 }));
