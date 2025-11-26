@@ -4,7 +4,7 @@ import React from "react";
 import Carousel from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 
-const PropertyGrid = ({ properties, isAdmin = false, onEdit, onDelete }) => {
+const PropertyGrid = ({ properties, isAdmin = true, onEdit, onDelete }) => {
   if (!properties?.length)
     return (
       <div className="text-center text-muted-foreground py-12">
