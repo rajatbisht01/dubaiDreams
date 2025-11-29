@@ -29,8 +29,8 @@ const AnimatedPropertyGrid = ({ properties, viewMode = "grid" }) => {
       }`}
     >
       {properties.map((property, index) => (
-        <AnimatedGridItem key={property.id} index={index}>
-          <PropertyCard property={property} />
+        <AnimatedGridItem key={property.id}  index={index}>
+          <PropertyCard viewMode={viewMode} property={property} />
         </AnimatedGridItem>
       ))}
     </div>

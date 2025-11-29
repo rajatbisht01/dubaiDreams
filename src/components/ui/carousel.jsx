@@ -8,7 +8,7 @@ const SPRING_OPTIONS = { type: 'spring', stiffness: 300, damping: 30 };
 export default function Carousel({
   items = [],
   baseWidth = 300,       // can be number (px) or string ('100%')
-  height = 256,          // height of carousel container
+  height = 260,          // height of carousel container
   autoplay = false,
   autoplayDelay = 3000,
   pauseOnHover = false,

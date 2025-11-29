@@ -40,25 +40,50 @@ export const usePropertyStore = create((set, get) => ({
   },
 
   /* ---------------------- FETCH FILTER METADATA ---------------------- */
-  fetchFilters: async () => {
+ /* ---------------------- FETCH FILTER METADATA (WITH CACHE) ---------------------- */
+fetchFilters: async () => {
+  // Try reading from localStorage first
+  const cached = localStorage.getItem("filtersMeta");
+
+  if (cached) {
     try {
-      const res = await fetch("/api/filters");
-      const data = await res.json();
-
+      const parsed = JSON.parse(cached);
       set({
-        propertyTypes: data.propertyTypes || [],
-        categories: data.statusTypes || [],
-        communities: data.communities || [],
-        developers: data.developers || [],
-        amenities: data.amenities || [],
+        propertyTypes: parsed.propertyTypes || [],
+        categories: parsed.categories || [],
+        communities: parsed.communities || [],
+        developers: parsed.developers || [],
+        amenities: parsed.amenities || [],
       });
+    } catch {}
+  }
 
-      return data;
-    } catch (err) {
-      console.error("[PropertyStore] fetchFilters error:", err);
-      return null;
-    }
-  },
+  // Fetch fresh data in background
+  try {
+    const res = await fetch("/api/filters");
+    const data = await res.json();
+
+    const filtersMeta = {
+      propertyTypes: data.propertyTypes || [],
+      categories: data.statusTypes || [],
+      communities: data.communities || [],
+      developers: data.developers || [],
+      amenities: data.amenities || [],
+    };
+
+    // Save to Zustand
+    set(filtersMeta);
+
+    // Save to localStorage for fast next loads
+    localStorage.setItem("filtersMeta", JSON.stringify(filtersMeta));
+
+    return data;
+  } catch (err) {
+    console.error("[PropertyStore] fetchFilters error:", err);
+    return null;
+  }
+},
+
 
   /* ---------------------- FETCH PROPERTIES ---------------------- */
   fetchProperties: async (filters = {}) => {

@@ -6,11 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Bed, Bath, Square } from "lucide-react";
 import Carousel from "../ui/carousel"; // import your existing carousel
 
-const PropertyCard = ({ property }) => {
+const PropertyCard = ({ property,viewMode='grid', }) => {
   if (!property) return null;
 
   const {
-    id,
+    id,  
     title = "Untitled Property",
     starting_price,
     property_images = [],
@@ -39,12 +39,12 @@ const PropertyCard = ({ property }) => {
     <Link href={`/properties/${id}`}>
       <Card className="group overflow-hidden w-[92%] hover:shadow-luxury transition-all duration-300 cursor-pointer flex flex-col h-full">
         {/* Image / Carousel */}
-        <div className="relative overflow-hidden  aspect-[4/3] h-[180px] ">
+        <div className={`relative overflow-hidden ${viewMode ==='grid'? 'aspect-[4/3] h-[180px]' : '' }  `}>
           {images.length > 1 ? (
             <Carousel
               items={images}
               baseWidth="100%"
-              height={250}
+              height={850}
               autoplay={true}
               autoplayDelay={3000}
               pauseOnHover={true}

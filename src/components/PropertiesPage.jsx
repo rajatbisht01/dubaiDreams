@@ -14,7 +14,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,16 +28,29 @@ import {
   List,
   Map,
   SlidersHorizontal,
-  X
+  X,
 } from "lucide-react";
 
 import { usePropertyStore } from "@/store/propertyStore";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "./ui/drawer";
 
 // Dynamically import MapView to avoid SSR issues with Leaflet
 const MapView = dynamic(() => import("@/components/property/MapView"), {
   ssr: false,
-  loading: () => <div className="h-[600px] flex items-center justify-center">Loading map...</div>
+  loading: () => (
+    <div className="h-[600px] flex items-center justify-center">
+      Loading map...
+    </div>
+  ),
 });
 
 const PropertiesPage = () => {
@@ -51,23 +64,33 @@ const PropertiesPage = () => {
     communities,
     developers,
     amenities,
-    fetchFilters
+    fetchFilters,
   } = usePropertyStore();
 
   /* -------------------------------- Filters -------------------------------- */
   const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [propertyType, setPropertyType] = useState(searchParams.get("propertyType") || "all");
-  const [category, setCategory] = useState(searchParams.get("category") || "all");
-  const [community, setCommunity] = useState(searchParams.get("community") || "all");
-  const [developer, setDeveloper] = useState(searchParams.get("developer") || "all");
+  const [propertyType, setPropertyType] = useState(
+    searchParams.get("propertyType") || "all"
+  );
+  const [category, setCategory] = useState(
+    searchParams.get("category") || "all"
+  );
+  const [community, setCommunity] = useState(
+    searchParams.get("community") || "all"
+  );
+  const [developer, setDeveloper] = useState(
+    searchParams.get("developer") || "all"
+  );
   const [beds, setBeds] = useState(searchParams.get("beds") || "any");
-  const [sortBy, setSortBy] = useState(searchParams.get("sortBy") || "created_at");
+  const [sortBy, setSortBy] = useState(
+    searchParams.get("sortBy") || "created_at"
+  );
   const [sortDir, setSortDir] = useState(searchParams.get("sortDir") || "desc");
 
   /* ----------------------- Price Range Filter ----------------------- */
   const [priceRange, setPriceRange] = useState([
     Number(searchParams.get("minPrice")) || 0,
-    Number(searchParams.get("maxPrice")) || 10000000
+    Number(searchParams.get("maxPrice")) || 10000000,
   ]);
   const [tempPriceRange, setTempPriceRange] = useState(priceRange);
 
@@ -105,7 +128,16 @@ const PropertiesPage = () => {
     if (priceRange[0] > 0 || priceRange[1] < 10000000) count++;
     if (selectedAmenities.length > 0) count++;
     return count;
-  }, [search, propertyType, category, community, developer, beds, priceRange, selectedAmenities]);
+  }, [
+    search,
+    propertyType,
+    category,
+    community,
+    developer,
+    beds,
+    priceRange,
+    selectedAmenities,
+  ]);
 
   /* ----------------------- Build Query Object (Memoized) ----------------------- */
   const queryObj = useMemo(() => {
@@ -113,7 +145,7 @@ const PropertiesPage = () => {
       page,
       limit,
       sortBy,
-      sortDir
+      sortDir,
     };
 
     if (search) params.search = search;
@@ -124,10 +156,23 @@ const PropertiesPage = () => {
     if (beds !== "any") params.bedrooms = beds;
     if (priceRange[0] > 0) params.minPrice = priceRange[0];
     if (priceRange[1] < 10000000) params.maxPrice = priceRange[1];
-    if (selectedAmenities.length > 0) params.amenities = selectedAmenities.join(",");
+    if (selectedAmenities.length > 0)
+      params.amenities = selectedAmenities.join(",");
 
     return params;
-  }, [search, propertyType, category, community, developer, beds, sortBy, sortDir, page, priceRange, selectedAmenities]);
+  }, [
+    search,
+    propertyType,
+    category,
+    community,
+    developer,
+    beds,
+    sortBy,
+    sortDir,
+    page,
+    priceRange,
+    selectedAmenities,
+  ]);
 
   /* ------------------------------ Sync URL ------------------------------ */
   const syncUrl = () => {
@@ -148,7 +193,7 @@ const PropertiesPage = () => {
 
     try {
       const res = await axios.get("/api/properties", {
-        params: queryObj
+        params: queryObj,
       });
 
       setProperties(res.data.data.items || []);
@@ -179,9 +224,9 @@ const PropertiesPage = () => {
 
   /* -------------------------- Handle Amenity Toggle -------------------------- */
   const toggleAmenity = (amenityId) => {
-    setSelectedAmenities(prev => 
+    setSelectedAmenities((prev) =>
       prev.includes(amenityId)
-        ? prev.filter(id => id !== amenityId)
+        ? prev.filter((id) => id !== amenityId)
         : [...prev, amenityId]
     );
   };
@@ -202,7 +247,16 @@ const PropertiesPage = () => {
     if (page !== 1) {
       setPage(1);
     }
-  }, [search, propertyType, category, community, developer, beds, priceRange, selectedAmenities]);
+  }, [
+    search,
+    propertyType,
+    category,
+    community,
+    developer,
+    beds,
+    priceRange,
+    selectedAmenities,
+  ]);
 
   /* ------------- Handle Sort Change ------------- */
   const handleSortChange = (value) => {
@@ -250,7 +304,6 @@ const PropertiesPage = () => {
         {/* Filters Section */}
         <section className="pb-8 px-4 md:px-20 bg-secondary/30">
           <div className="container mx-auto px-4">
-
             {/* Page Title */}
             <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center pt-6">
               Browse Properties
@@ -259,7 +312,6 @@ const PropertiesPage = () => {
             {/* Main Filter Card */}
             <div className="bg-card rounded-lg p-4 shadow mb-4">
               <div className="flex flex-col md:flex-row gap-3">
-
                 {/* Search */}
                 <div className="flex-1 relative">
                   <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
@@ -317,22 +369,25 @@ const PropertiesPage = () => {
                 </Select>
 
                 {/* More Filters Button */}
-                <Popover>
-                  <PopoverTrigger asChild>
+                <Drawer>
+                  <DrawerTrigger asChild>
                     <Button variant="outline" className="h-12 relative">
                       <SlidersHorizontal className="h-5 w-5 mr-2" />
                       More Filters
                       {activeFiltersCount > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        <span className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
                           {activeFiltersCount}
                         </span>
                       )}
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 bg-white max-h-[800px] overflow-y-auto">
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-lg">Additional Filters</h3>
+                  </DrawerTrigger>
 
+                  <DrawerContent className="max-h-[100vh] ">
+                    <DrawerHeader>
+                      <DrawerTitle>Additional Filters</DrawerTitle>
+                    </DrawerHeader>
+
+                    <div className="p-4 space-y-6">
                       {/* Developer */}
                       <div>
                         <Label className="mb-2 block">Developer</Label>
@@ -373,8 +428,10 @@ const PropertiesPage = () => {
                       {/* Price Range */}
                       <div>
                         <Label className="mb-2 block">
-                          Price Range: AED {formatPrice(tempPriceRange[0])} - {formatPrice(tempPriceRange[1])}
+                          Price Range: AED {formatPrice(tempPriceRange[0])} -{" "}
+                          {formatPrice(tempPriceRange[1])}
                         </Label>
+
                         <Slider
                           min={0}
                           max={10000000}
@@ -382,9 +439,9 @@ const PropertiesPage = () => {
                           value={tempPriceRange}
                           onValueChange={setTempPriceRange}
                           onValueCommit={setPriceRange}
-                          className="mb-2"
                         />
-                        <div className="flex justify-between text-xs text-muted-foreground">
+
+                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
                           <span>0</span>
                           <span>10M+</span>
                         </div>
@@ -395,11 +452,16 @@ const PropertiesPage = () => {
                         <Label className="mb-2 block">Amenities</Label>
                         <div className="space-y-2 grid grid-cols-2 max-h-60 overflow-y-auto border rounded-md p-2">
                           {amenities?.map((amenity) => (
-                            <div key={amenity.id} className="flex items-center space-x-2">
+                            <div
+                              key={amenity.id}
+                              className="flex items-center space-x-2"
+                            >
                               <Checkbox
                                 id={amenity.id}
                                 checked={selectedAmenities.includes(amenity.id)}
-                                onCheckedChange={() => toggleAmenity(amenity.id)}
+                                onCheckedChange={() =>
+                                  toggleAmenity(amenity.id)
+                                }
                               />
                               <label
                                 htmlFor={amenity.id}
@@ -410,6 +472,7 @@ const PropertiesPage = () => {
                             </div>
                           ))}
                         </div>
+
                         {selectedAmenities.length > 0 && (
                           <p className="text-xs text-muted-foreground mt-1">
                             {selectedAmenities.length} selected
@@ -429,9 +492,16 @@ const PropertiesPage = () => {
                         </Button>
                       )}
                     </div>
-                  </PopoverContent>
-                </Popover>
 
+                    <DrawerFooter>
+                      <DrawerClose asChild>
+                        <Button className="w-full bg-brand hover:text-white hover:bg-black">
+                          Close
+                        </Button>
+                      </DrawerClose>
+                    </DrawerFooter>
+                  </DrawerContent>
+                </Drawer>
               </div>
             </div>
 
@@ -441,52 +511,80 @@ const PropertiesPage = () => {
                 {search && (
                   <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
                     Search: {search}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setSearch("")} />
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSearch("")}
+                    />
                   </div>
                 )}
                 {propertyType !== "all" && (
                   <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    Type: {propertyTypes.find(t => t.id === propertyType)?.name}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setPropertyType("all")} />
+                    Type:{" "}
+                    {propertyTypes.find((t) => t.id === propertyType)?.name}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setPropertyType("all")}
+                    />
                   </div>
                 )}
                 {category !== "all" && (
                   <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    Status: {categories.find(c => c.id === category)?.name}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setCategory("all")} />
+                    Status: {categories.find((c) => c.id === category)?.name}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setCategory("all")}
+                    />
                   </div>
                 )}
                 {community !== "all" && (
                   <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    Community: {communities.find(c => c.id === community)?.name}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setCommunity("all")} />
+                    Community:{" "}
+                    {communities.find((c) => c.id === community)?.name}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setCommunity("all")}
+                    />
                   </div>
                 )}
                 {developer !== "all" && (
                   <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    Developer: {developers.find(d => d.id === developer)?.name}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setDeveloper("all")} />
+                    Developer:{" "}
+                    {developers.find((d) => d.id === developer)?.name}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setDeveloper("all")}
+                    />
                   </div>
                 )}
                 {beds !== "any" && (
                   <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
                     Beds: {beds}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setBeds("any")} />
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setBeds("any")}
+                    />
                   </div>
                 )}
                 {(priceRange[0] > 0 || priceRange[1] < 10000000) && (
                   <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    Price: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                      setPriceRange([0, 10000000]);
-                      setTempPriceRange([0, 10000000]);
-                    }} />
+                    Price: {formatPrice(priceRange[0])} -{" "}
+                    {formatPrice(priceRange[1])}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => {
+                        setPriceRange([0, 10000000]);
+                        setTempPriceRange([0, 10000000]);
+                      }}
+                    />
                   </div>
                 )}
                 {selectedAmenities.length > 0 && (
                   <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
                     Amenities: {selectedAmenities.length}
-                    <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedAmenities([])} />
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSelectedAmenities([])}
+                    />
                   </div>
                 )}
                 <Button
@@ -507,21 +605,24 @@ const PropertiesPage = () => {
                   "Loading..."
                 ) : (
                   <>
-                    Showing <strong>{properties.length}</strong> of <strong>{total}</strong> properties
+                    Showing <strong>{properties.length}</strong> of{" "}
+                    <strong>{total}</strong> properties
                   </>
                 )}
               </p>
 
               <div className="flex items-center gap-4">
-
                 {/* Sort */}
-                <Select 
+                <Select
                   value={
-                    sortBy === "isFeatured" ? "featured" :
-                    sortBy === "starting_price" && sortDir === "asc" ? "price-low" :
-                    sortBy === "starting_price" && sortDir === "desc" ? "price-high" :
-                    "newest"
-                  } 
+                    sortBy === "isFeatured"
+                      ? "featured"
+                      : sortBy === "starting_price" && sortDir === "asc"
+                      ? "price-low"
+                      : sortBy === "starting_price" && sortDir === "desc"
+                      ? "price-high"
+                      : "newest"
+                  }
                   onValueChange={handleSortChange}
                 >
                   <SelectTrigger className="w-48">
@@ -530,7 +631,9 @@ const PropertiesPage = () => {
                   <SelectContent>
                     <SelectItem value="featured">Featured</SelectItem>
                     <SelectItem value="price-low">Price: Low → High</SelectItem>
-                    <SelectItem value="price-high">Price: High → Low</SelectItem>
+                    <SelectItem value="price-high">
+                      Price: High → Low
+                    </SelectItem>
                     <SelectItem value="newest">Newest First</SelectItem>
                   </SelectContent>
                 </Select>
@@ -561,7 +664,6 @@ const PropertiesPage = () => {
                     <Map />
                   </Button>
                 </div>
-
               </div>
             </div>
           </div>
@@ -576,21 +678,28 @@ const PropertiesPage = () => {
               </div>
             ) : properties.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">No properties found.</p>
-                <p className="text-sm text-muted-foreground mt-2">Try adjusting your filters</p>
+                <p className="text-muted-foreground text-lg">
+                  No properties found.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Try adjusting your filters
+                </p>
               </div>
             ) : viewMode === "map" ? (
               <MapView properties={properties} />
             ) : (
-              <AnimatedPropertyGrid properties={properties} viewMode={viewMode} />
+              <AnimatedPropertyGrid
+                properties={properties}
+                viewMode={viewMode}
+              />
             )}
           </div>
 
           {/* Pagination */}
           {!loading && properties.length > 0 && (
             <div className="flex justify-center items-center gap-4 py-6">
-              <Button 
-                disabled={page <= 1} 
+              <Button
+                disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
                 variant="outline"
               >
@@ -611,7 +720,6 @@ const PropertiesPage = () => {
             </div>
           )}
         </section>
-
       </main>
     </div>
   );
