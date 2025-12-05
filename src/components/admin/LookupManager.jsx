@@ -21,8 +21,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Search, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
+
+const FRIENDLY_LABELS = {
+  "developers": "developer",
+  "view-types": "view type",
+  "property-types": "property type",
+  "property-status": "property status",
+  "communities": "community",
+  "amenities": "amenity",
+  "features": "feature",
+  "nearby-categories": "nearby category",
+  "document-types": "document type",
+};
 
 const LookupManager = ({ 
   title, 
@@ -104,7 +116,7 @@ const LookupManager = ({
     }
   };
 
-  // Handle delete
+  // Handle delete WITH CONTEXTUAL MESSAGING
   const handleDelete = async () => {
     try {
       const res = await fetch(`/api/admin/lookups/${endpoint}/${deleteId}`, {
@@ -112,6 +124,7 @@ const LookupManager = ({
       });
 
       const data = await res.json();
+      const label = FRIENDLY_LABELS[endpoint] || "item";
 
       if (data.success) {
         toast.success("Deleted successfully");
@@ -120,7 +133,12 @@ const LookupManager = ({
         fetchItems();
         if (onUpdate) onUpdate();
       } else {
-        toast.error(data.error || "Delete failed");
+        // Foreign key block
+        if (data.error?.includes("used by a property")) {
+          toast.error(`Cannot delete this ${label} because it is linked to one or more properties.`);
+        } else {
+          toast.error(data.error || "Delete failed");
+        }
       }
     } catch (err) {
       console.error("Delete error:", err);

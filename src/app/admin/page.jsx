@@ -24,10 +24,11 @@ import PropertyGrid from "@/components/property/PropertyGrid";
 import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 import LookupManager from "@/components/admin/LookupManager";
 import UserManager from "@/components/admin/UserManager";
+import { useUser } from "@/hooks/useUser";
 
 const AdminPage = () => {
   const [activeTab, setActiveTab] = useState("properties");
-  
+  const { profile, loading } = useUser();
   // Properties state
   const [properties, setProperties] = useState([]);
   const [drawerItem, setDrawerItem] = useState(null);
@@ -103,7 +104,9 @@ const AdminPage = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+          <h1 className="text-4xl font-bold mb-2 text-center">Admin Dashboard</h1>
+          <h1 className="text-4xl font-bold mb-2">Hi {profile?.full_name}</h1>
+
           <p className="text-muted-foreground">
             Manage properties, lookups, and users
           </p>

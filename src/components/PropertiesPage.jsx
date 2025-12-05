@@ -382,7 +382,7 @@ const PropertiesPage = () => {
                     </Button>
                   </DrawerTrigger>
 
-                  <DrawerContent className="max-h-[100vh] ">
+                  <DrawerContent className="max-h-[100vh] w-[30vw] p-4">
                     <DrawerHeader>
                       <DrawerTitle>Additional Filters</DrawerTitle>
                     </DrawerHeader>
