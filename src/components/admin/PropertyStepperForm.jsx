@@ -409,7 +409,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             <Input value={payload.slug} onChange={(e) => setField("slug", e.target.value)} placeholder="slug" />
 
             <Label>Description</Label>
-            <Textarea value={payload.description} onChange={(e) => setField("description", e.target.value)} />
+            <Textarea className={'ring-1'} value={payload.description} onChange={(e) => setField("description", e.target.value)} />
           
             <div className="grid grid-cols-2 gap-4">
               <div>

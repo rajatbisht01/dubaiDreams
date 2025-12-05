@@ -324,12 +324,12 @@ const AdminPage = () => {
         {/* Property Stepper Form Dialog */}
         {drawerItem && (
           <Dialog open={!!drawerItem} onOpenChange={() => setDrawerItem(null)}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
+            <DialogContent className="max-w-4xl text-center p-2 max-h-[100vh] overflow-y-auto">
+              <DialogHeader >
+                <DialogTitle className={'text-center'} >
                   {drawerItem.id ? "Edit Property" : "Create New Property"}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className={'text-center'}>
                   Fill in all steps to save the property
                 </DialogDescription>
               </DialogHeader>
