@@ -656,13 +656,13 @@ const PropertiesPage = () => {
                     <List />
                   </Button>
 
-                  {/* <Button
+                  <Button
                     variant={viewMode === "map" ? "default" : "outline"}
                     size="icon"
                     onClick={() => setViewMode("map")}
                   >
                     <Map />
-                  </Button> */}
+                  </Button>
                 </div>
               </div>
             </div>

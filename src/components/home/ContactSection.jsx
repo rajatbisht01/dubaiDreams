@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send, Sparkles, MapPin, Phone, Mail } from "lucide-react";
-
+import { toast } from "sonner";
 const BRAND_COLORS = {
   gradient1: "from-blue-600 to-cyan-400",
   gradient2: "from-pink-500 to-purple-600",
@@ -43,7 +43,7 @@ const ContactSection = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Inquiry sent successfully!");
+        toast.success("Inquiry sent successfully!");
         setFormData({
           firstName: "",
           lastName: "",
@@ -56,11 +56,11 @@ const ContactSection = () => {
           message: "",
         });
       } else {
-        alert(data.error || "Failed to send inquiry.");
+        toast.error(data.error || "Failed to send inquiry.");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred. Please try again later.");
+      toast.error("An error occurred. Please try again later.");
     } finally {
       setLoading(false);
     }

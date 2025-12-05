@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Image as ImageIcon } from "lucide-react";
-
+import { toast } from "sonner";
 export default function PropertyStepperForm({ item = null, onClose = () => {}, onSuccess = () => {} }) {
   const isEdit = !!item?.id;
   const [loading, setLoading] = useState(false);
@@ -29,6 +29,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
   const [payload, setPayload] = useState({
     title: "",
     slug: "",
+     isFeatured: false,
     description: "",
     developer_id: null,
     community_id: null,
@@ -83,6 +84,8 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       ...p,
       title: it.title || "",
       slug: it.slug || "",
+   isFeatured: it.isFeatured ?? false,
+
       description: it.description || "",
       developer_id: it.developer_id || null,
       community_id: it.community_id || null,
@@ -236,6 +239,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       // 4) Build property payload
       const propertyPayload = {
         title: payload.title,
+        isFeatured: payload.isFeatured,
         slug: payload.slug?.trim() !== "" ? payload.slug : payload.title?.toLowerCase().replace(/\s+/g, "-").slice(0, 200),
         description: payload.description,
         developer_id: payload.developer_id,
@@ -293,7 +297,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             image_url: imgUrl,
-            is_featured: false,
+            isFeatured: false,
             sort_order: 0,
           }),
         });
@@ -360,13 +364,13 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       setLoading(false);
       onSuccess();
       onClose();
-      alert(isEdit ? "Property updated!" : "Property created!");
+      toast.success(isEdit ? "Property updated!" : "Property created!");
 
     } catch (err) {
       console.error("Final submit error", err);
       setError(err.message || "Error");
       setLoading(false);
-      alert(err.message || "Submit failed");
+      toast.error(err.message || "Submit failed");
     }
   }
 
@@ -393,13 +397,20 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
           <div className="space-y-4">
             <Label>Title</Label>
             <Input value={payload.title} onChange={(e) => setField("title", e.target.value)} placeholder="Title" />
+            <div className="flex items-center gap-2 mt-4">
+  <Checkbox
+    checked={payload.isFeatured}
+    onCheckedChange={(v) => setField("isFeatured", v)}
+  />
+  <Label>Featured Property?</Label>
+</div>
 
             <Label>Slug (optional)</Label>
             <Input value={payload.slug} onChange={(e) => setField("slug", e.target.value)} placeholder="slug" />
 
             <Label>Description</Label>
             <Textarea value={payload.description} onChange={(e) => setField("description", e.target.value)} />
-
+          
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Developer</Label>
