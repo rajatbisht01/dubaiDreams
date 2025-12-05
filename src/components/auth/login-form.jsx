@@ -62,6 +62,7 @@ export function LoginForm({ className, ...props }) {
                 <Input
                   id="email"
                   type="email"
+                  className="text-black"
                   placeholder="m@example.com"
                   required
                   value={email}
@@ -83,6 +84,7 @@ export function LoginForm({ className, ...props }) {
                   type="password"
                   required
                   value={password}
+                  className="text-black"
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
