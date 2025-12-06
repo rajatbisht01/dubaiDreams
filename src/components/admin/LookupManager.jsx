@@ -169,7 +169,7 @@ const LookupManager = ({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-5xl mx-auto">
       {/* Header */}
       <Card>
         <CardHeader>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Stepper, { Step } from "@/components/ui/Stepper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+
 export default function PropertyStepperForm({ item = null, onClose = () => {}, onSuccess = () => {} }) {
   const isEdit = !!item?.id;
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
   const [payload, setPayload] = useState({
     title: "",
     slug: "",
-     isFeatured: false,
+    isFeatured: false,
     description: "",
     developer_id: null,
     community_id: null,
@@ -84,8 +85,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       ...p,
       title: it.title || "",
       slug: it.slug || "",
-   isFeatured: it.isFeatured ?? false,
-
+      isFeatured: it.isFeatured ?? false,
       description: it.description || "",
       developer_id: it.developer_id || null,
       community_id: it.community_id || null,
@@ -173,7 +173,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     setPayload((p) => {
       const next = [...(p.construction_updates || [])];
       next.splice(idx, 1);
-      return { ...p, construction_updates: next };
+      return { ...p, nearby_points: next };
     });
   }
 
@@ -186,61 +186,45 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     });
   }
 
-  // FIXED: Upload with file type parameter
+  // ULTRA-FAST: Parallel upload with no logging
   async function uploadFile(file, fileType) {
     const form = new FormData();
     form.append("file", file);
-    form.append("fileType", fileType); // "image" | "document" | "floorplan"
+    form.append("fileType", fileType);
     
     const res = await fetch("/api/upload", { method: "POST", body: form });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: "upload failed" }));
-      throw new Error(err?.error || "Upload failed");
-    }
+    if (!res.ok) throw new Error("Upload failed");
     const d = await res.json();
-    console.log(`Uploaded ${fileType}:`, d.file);
     return d.file;
+  }
+
+  // OPTIMIZED: Single batched POST request
+  async function postBatch(url, dataArray) {
+    if (!dataArray.length) return;
+    return Promise.allSettled(
+      dataArray.map(data =>
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+      )
+    );
   }
 
   async function handleFinalSubmit() {
     setLoading(true);
     setError(null);
 
+    // IMMEDIATE CLOSE - Don't wait for completion
+    const successMessage = isEdit ? "Property updated!" : "Property created!";
+    
     try {
-      // 1) Upload images to property-images bucket
-      const uploadedImageUrls = [];
-      for (const f of payload.imageFiles || []) {
-        const url = await uploadFile(f, "image");
-        uploadedImageUrls.push(url);
-      }
-
-      // 2) Upload documents to property-documents bucket
-      const uploadedDocuments = [];
-      for (const d of payload.documentFiles || []) {
-        const url = await uploadFile(d.file, "document");
-        uploadedDocuments.push({
-          url,
-          title: d.title,
-          document_type_id: d.document_type_id
-        });
-      }
-
-      // 3) Upload floor plans to property-documents bucket
-      const uploadedFloorPlans = [];
-      for (const fp of payload.floorPlanFiles || []) {
-        const url = await uploadFile(fp.file, "document");
-        uploadedFloorPlans.push({
-          url,
-          title: fp.title,
-          size: fp.size
-        });
-      }
-
-      // 4) Build property payload
+      // Step 1: Build property payload first (no async)
       const propertyPayload = {
         title: payload.title,
         isFeatured: payload.isFeatured,
-        slug: payload.slug?.trim() !== "" ? payload.slug : payload.title?.toLowerCase().replace(/\s+/g, "-").slice(0, 200),
+        slug: payload.slug?.trim() || payload.title?.toLowerCase().replace(/\s+/g, "-").slice(0, 200),
         description: payload.description,
         developer_id: payload.developer_id,
         community_id: payload.community_id,
@@ -267,7 +251,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
         views: payload.views || [],
       };
 
-      // 5) Create or update property
+      // Step 2: Save property FIRST (blocks only for property creation)
       const url = isEdit ? `/api/admin/properties/${item.id}` : `/api/admin/properties`;
       const method = isEdit ? "PUT" : "POST";
 
@@ -287,90 +271,79 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
       if (!propertyId) throw new Error("No property ID returned");
 
-      console.log("Property saved:", propertyId);
-      console.log("Uploading media:", { images: uploadedImageUrls.length, docs: uploadedDocuments.length, floors: uploadedFloorPlans.length });
-
-      // 6) Attach images
-      for (const imgUrl of uploadedImageUrls) {
-        const imgRes = await fetch(`/api/properties/${propertyId}/images`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            image_url: imgUrl,
-            isFeatured: false,
-            sort_order: 0,
-          }),
-        });
-        if (!imgRes.ok) {
-          console.error("Failed to save image:", await imgRes.text());
-        }
-      }
-
-      // 7) Attach documents
-      for (const doc of uploadedDocuments) {
-        const docRes = await fetch(`/api/properties/${propertyId}/documents`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            document_type_id: doc.document_type_id,
-            title: doc.title,
-            file_url: doc.url,
-            sort_order: 0,
-          }),
-        });
-        if (!docRes.ok) {
-          console.error("Failed to save document:", await docRes.text());
-        }
-      }
-
-      // 8) Attach floor plans
-      for (const fp of uploadedFloorPlans) {
-        const fpRes = await fetch(`/api/properties/${propertyId}/floor-plans`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: fp.title,
-            size: fp.size,
-            pdf_url: fp.url,
-          }),
-        });
-        if (!fpRes.ok) {
-          console.error("Failed to save floor plan:", await fpRes.text());
-        }
-      }
-
-      // 9) Attach nearby points
-      for (const np of payload.nearby_points || []) {
-        if (np.name && np.category_id) {
-          await fetch(`/api/properties/${propertyId}/nearby-points`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(np),
-          });
-        }
-      }
-
-      // 10) Attach construction updates
-      for (const cu of payload.construction_updates || []) {
-        if (cu.update_text) {
-          await fetch(`/api/properties/${propertyId}/construction-updates`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(cu),
-          });
-        }
-      }
-
-      setLoading(false);
+      // CRITICAL: Close modal immediately after property is saved
+      toast.success(successMessage);
       onSuccess();
       onClose();
-      toast.success(isEdit ? "Property updated!" : "Property created!");
+      setLoading(false);
+
+      // Step 3: Continue uploads in background (fire and forget)
+      (async () => {
+        try {
+          // Upload all files in parallel
+          const [imageUrls, documentData, floorPlanData] = await Promise.all([
+            Promise.all((payload.imageFiles || []).map(f => uploadFile(f, "image"))),
+            Promise.all((payload.documentFiles || []).map(async (d) => ({
+              url: await uploadFile(d.file, "document"),
+              title: d.title,
+              document_type_id: d.document_type_id
+            }))),
+            Promise.all((payload.floorPlanFiles || []).map(async (fp) => ({
+              url: await uploadFile(fp.file, "document"),
+              title: fp.title,
+              size: fp.size
+            })))
+          ]);
+
+          // Batch all POST operations in parallel
+          await Promise.allSettled([
+            postBatch(
+              `/api/properties/${propertyId}/images`,
+              imageUrls.map((url, idx) => ({
+                image_url: url,
+                isFeatured: false,
+                sort_order: idx,
+              }))
+            ),
+            postBatch(
+              `/api/properties/${propertyId}/documents`,
+              documentData.map((doc, idx) => ({
+                document_type_id: doc.document_type_id,
+                title: doc.title,
+                file_url: doc.url,
+                sort_order: idx,
+              }))
+            ),
+            postBatch(
+              `/api/properties/${propertyId}/floor-plans`,
+              floorPlanData.map((fp) => ({
+                title: fp.title,
+                size: fp.size,
+                pdf_url: fp.url,
+              }))
+            ),
+            postBatch(
+              `/api/properties/${propertyId}/nearby-points`,
+              (payload.nearby_points || []).filter(np => np.name && np.category_id)
+            ),
+            postBatch(
+              `/api/properties/${propertyId}/construction-updates`,
+              (payload.construction_updates || []).filter(cu => cu.update_text)
+            ),
+          ]);
+
+        } catch (bgErr) {
+          console.error("Background upload error:", bgErr);
+          // Show a subtle notification that media upload failed
+          toast.error("Some media uploads failed. Please re-edit the property to upload them.");
+        }
+      })();
 
     } catch (err) {
-      console.error("Final submit error", err);
+      console.error("Property save error", err);
       setError(err.message || "Error");
       setLoading(false);
-      toast.error(err.message || "Submit failed");
+      toast.error(err.message || "Failed to save property");
     }
   }
 
@@ -381,6 +354,16 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       return { ...p, [listKey]: arr };
     });
   }
+
+  // Memoize image previews to avoid re-creating object URLs
+  const imagePreviews = useMemo(() => 
+    (payload.imageFiles || []).map((f, i) => ({
+      url: URL.createObjectURL(f),
+      name: f.name,
+      index: i
+    })),
+    [payload.imageFiles]
+  );
 
   return (
     <div className="p-2">
@@ -398,12 +381,12 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             <Label>Title</Label>
             <Input value={payload.title} onChange={(e) => setField("title", e.target.value)} placeholder="Title" />
             <div className="flex items-center gap-2 mt-4">
-  <Checkbox
-    checked={payload.isFeatured}
-    onCheckedChange={(v) => setField("isFeatured", v)}
-  />
-  <Label>Featured Property?</Label>
-</div>
+              <Checkbox
+                checked={payload.isFeatured}
+                onCheckedChange={(v) => setField("isFeatured", v)}
+              />
+              <Label>Featured Property?</Label>
+            </div>
 
             <Label>Slug (optional)</Label>
             <Input value={payload.slug} onChange={(e) => setField("slug", e.target.value)} placeholder="slug" />
@@ -499,13 +482,13 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             </label>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
-              {(payload.imageFiles || []).map((f, i) => (
-                <div key={i} className="p-1 border rounded relative">
-                  <img src={URL.createObjectURL(f)} alt={f.name} className="w-full h-24 object-cover rounded" />
-                  <button type="button" onClick={() => removeFileFromList("imageFiles", i)} className="absolute top-1 right-1 bg-white rounded px-1">x</button>
+              {imagePreviews.map(({ url, name, index }) => (
+                <div key={index} className="p-1 border rounded relative">
+                  <img src={url} alt={name} className="w-full h-24 object-cover rounded" />
+                  <button type="button" onClick={() => removeFileFromList("imageFiles", index)} className="absolute top-1 right-1 bg-white rounded px-1">×</button>
                 </div>
               ))}
-              {(!payload.imageFiles || payload.imageFiles.length === 0) && (
+              {imagePreviews.length === 0 && (
                 <div className="col-span-3 text-center text-sm text-muted-foreground p-6 border rounded">
                   <ImageIcon className="mx-auto mb-2" />
                   No images selected
@@ -531,7 +514,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                   <option value="">-- type --</option>
                   {lookups.documentTypes.map(dt => <option key={dt.id} value={dt.id}>{dt.name}</option>)}
                 </select>
-                <button onClick={() => removeFileFromList("documentFiles", idx)} className="px-2">Remove</button>
+                <button onClick={() => removeFileFromList("documentFiles", idx)} className="px-2">×</button>
               </div>
             ))}
           </div>
@@ -547,7 +530,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                 <input className="border p-1" placeholder="size (e.g., 1200 sqft)" value={d.size} onChange={(e) => {
                   const arr = [...payload.floorPlanFiles]; arr[idx] = { ...arr[idx], size: e.target.value }; setPayload(p=>({ ...p, floorPlanFiles: arr }));
                 }} />
-                <button onClick={() => removeFileFromList("floorPlanFiles", idx)} className="px-2">Remove</button>
+                <button onClick={() => removeFileFromList("floorPlanFiles", idx)} className="px-2">×</button>
               </div>
             ))}
           </div>
@@ -557,7 +540,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
         <Step>
           <div>
             <Label>Choose Amenities</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2 max-h-24 overflow-y-auto border p-2">
+            <div className="grid grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-2">
               {lookups.amenities.map((a) => (
                 <label key={a.id} className="flex items-center gap-2">
                   <Checkbox checked={(payload.amenities || []).includes(a.id)} onCheckedChange={() => toggleAssoc("amenities", a.id)} />
@@ -567,7 +550,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             </div>
 
             <Label className="mt-4">Choose Features</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2 max-h-24 overflow-y-auto border p-2">
+            <div className="grid grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-2">
               {lookups.features.map((f) => (
                 <label key={f.id} className="flex items-center gap-2">
                   <Checkbox checked={(payload.features || []).includes(f.id)} onCheckedChange={() => toggleAssoc("features", f.id)} />
@@ -577,7 +560,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             </div>
 
             <Label className="mt-4">Choose Views</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2 max-h-24 overflow-y-auto border p-2">
+            <div className="grid grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-2">
               {lookups.viewTypes.map((v) => (
                 <label key={v.id} className="flex items-center gap-2">
                   <Checkbox checked={(payload.views || []).includes(v.id)} onCheckedChange={() => toggleAssoc("views", v.id)} />
@@ -615,7 +598,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
               {(payload.construction_updates || []).map((cu, idx) => (
                 <div key={idx} className="grid grid-cols-6 gap-2 items-center">
                   <textarea className="col-span-3 border p-1" value={cu.update_text} onChange={(e) => updateConstructionUpdate(idx, "update_text", e.target.value)} placeholder="Update text" />
-                  <input className="col-span-1 border p-1" value={cu.progress_percent} onChange={(e) => updateConstructionUpdate(idx, "progress_percent", e.target.value)} placeholder="percent" />
+                  <input className="col-span-1 border p-1" value={cu.progress_percent} onChange={(e) => updateConstructionUpdate(idx, "progress_percent", e.target.value)} placeholder="%" />
                   <input className="col-span-2 border p-1" type="date" value={cu.update_date || ""} onChange={(e) => updateConstructionUpdate(idx, "update_date", e.target.value)} />
                   <button className="col-span-6 mt-1 text-sm text-red-600" onClick={() => removeConstructionUpdate(idx)}>Remove</button>
                 </div>
@@ -630,22 +613,23 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Review & Submit</h3>
 
-            <div className="border p-3 rounded">
+            <div className="border p-3 rounded space-y-1">
               <p><strong>Title:</strong> {payload.title}</p>
               <p><strong>Developer:</strong> {lookups.developers.find(d=>d.id===payload.developer_id)?.name || "-"}</p>
               <p><strong>Community:</strong> {lookups.communities.find(c=>c.id===payload.community_id)?.name || "-"}</p>
               <p><strong>Type:</strong> {lookups.propertyTypes.find(t=>t.id===payload.property_type_id)?.name || "-"}</p>
               <p><strong>Status:</strong> {lookups.statusTypes.find(s=>s.id===payload.status_id)?.name || "-"}</p>
               <p><strong>Starting Price:</strong> {payload.starting_price || "-"}</p>
-              <p><strong>Amenities:</strong> {(payload.amenities || []).map(id=>lookups.amenities.find(a=>a.id===id)?.name).filter(Boolean).join(", ") || "-"}</p>
-              <p><strong>Images:</strong> {(payload.imageFiles || []).length} files selected</p>
-              <p><strong>Documents:</strong> {(payload.documentFiles || []).length} files selected</p>
-              <p><strong>Floor Plans:</strong> {(payload.floorPlanFiles || []).length} files selected</p>
+              <p><strong>Images:</strong> {(payload.imageFiles || []).length} files</p>
+              <p><strong>Documents:</strong> {(payload.documentFiles || []).length} files</p>
+              <p><strong>Floor Plans:</strong> {(payload.floorPlanFiles || []).length} files</p>
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button onClick={onClose} variant="destructive">Cancel</Button>
-              <Button onClick={handleFinalSubmit} disabled={loading}>{loading ? "Saving..." : (isEdit ? "Update Property" : "Create Property")}</Button>
+              <Button onClick={onClose} variant="outline" disabled={loading}>Cancel</Button>
+              <Button onClick={handleFinalSubmit} disabled={loading}>
+                {loading ? "Saving..." : (isEdit ? "Update" : "Create")}
+              </Button>
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
           </div>

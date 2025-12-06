@@ -177,7 +177,7 @@ const AdminPage = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9 mb-8">
+          <TabsList className="grid w-full bg-gray-500 grid-cols-3 lg:grid-cols-9 mb-8">
             <TabsTrigger value="properties" className="gap-2">
               <Home className="h-4 w-4" />
               <span className="hidden sm:inline">Properties</span>
@@ -217,7 +217,7 @@ const AdminPage = () => {
           </TabsList>
 
           {/* Properties Tab */}
-          <TabsContent value="properties" className="space-y-4">
+          <TabsContent value="properties" className="space-y-4 text-center">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold">Properties Management</h2>
@@ -324,7 +324,7 @@ const AdminPage = () => {
         {/* Property Stepper Form Dialog */}
         {drawerItem && (
           <Dialog open={!!drawerItem} onOpenChange={() => setDrawerItem(null)}>
-            <DialogContent className="max-w-4xl text-center p-2 max-h-[100vh] overflow-y-auto">
+            <DialogContent className="max-w-5xl text-center p-2 max-h-[100vh] overflow-y-auto">
               <DialogHeader >
                 <DialogTitle className={'text-center'} >
                   {drawerItem.id ? "Edit Property" : "Create New Property"}
