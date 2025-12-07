@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 const Footer = () => {
   return (
-    <footer className="bg-primary/90 py-8 text-white">
+    <footer className="bg-primary/90 py-2 text-white">
       <motion.div
         initial={{ opacity: 0, y: -40 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -17,8 +17,10 @@ const Footer = () => {
             
             {/* Company Info */}
             <div className="lg:col-span-2">
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-white mb-2">Dubai Dreams Properties</h3>
+              <div className="mb-4">
+                {/* <h3 className="text-2xl font-bold text-white mb-2">Dubai Dreams Properties</h3> */}
+                 <img className="w-24 h-24" src="/assets/logo.png" alt="" />
+
                 <p className="text-secondary leading-relaxed">
                   Your trusted partner for buying, selling, and renting properties in Dubai. 
                   We specialize in luxury apartments, villas, and commercial spaces, offering 
