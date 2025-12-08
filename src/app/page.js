@@ -79,7 +79,7 @@ useEffect(() => {
         </section>
   <Hero />
     {/* 🏠 featured Properties */}
-    <section className=" bg-background my-8">
+    <section className="px-8 bg-background my-8">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Featured Off-Plan Properties</h2>
@@ -92,7 +92,7 @@ useEffect(() => {
         )}
         <div className="text-center mt-4">
           <Link href="/properties">
-            <Button size="lg" className="bg-primary hover:bg-primary-light">
+            <Button size="lg" className="bg-primary hover:bg-primary-light mt-4">
               View All Properties
             </Button>
           </Link>
@@ -100,7 +100,7 @@ useEffect(() => {
       </div>
     </section>
 
-   <section className=" bg-background mb-12">
+   <section className="px-8 bg-background mb-12">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Explore All Properties</h2>
@@ -113,7 +113,7 @@ useEffect(() => {
         )}
         <div className="text-center mt-4">
           <Link href="/properties">
-            <Button size="lg" className="bg-primary hover:bg-primary-light">
+            <Button size="lg" className="bg-primary hover:bg-primary-light mt-4">
               View All Properties
             </Button>
           </Link>

@@ -189,7 +189,7 @@ const stepVariants = {
 };
 
 export function Step({ children }) {
-  return <div className="px-8 py-4">{children}</div>;
+  return <div className="px-4 py-2">{children}</div>;
 }
 
 function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }) {
@@ -234,7 +234,7 @@ function StepConnector({ isComplete }) {
   };
 
   return (
-    <div className="relative mx-2 h-0.5 flex-1 overflow-hidden rounded bg-neutral-600">
+    <div className="relative mx-2 h-0.5 md:flex-1 overflow-hidden rounded bg-neutral-600">
       <motion.div
         className="absolute left-0 top-0 h-full"
         variants={lineVariants}

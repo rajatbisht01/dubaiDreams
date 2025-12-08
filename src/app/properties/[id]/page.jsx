@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { use } from "react";
+import { toast } from "sonner";
+import PropertyGallery from "@/components/property/PropertyGallery";
 
 const PropertyDetail = ({ params }) => {
   const { fetchPropertyById, loading } = usePropertyStore();
@@ -25,7 +27,7 @@ const PropertyDetail = ({ params }) => {
     phone: '',
     email: '',
     message: '',
-    isAgent: false
+  
   });
 
   const resolvedParams = use(params);
@@ -69,10 +71,37 @@ const PropertyDetail = ({ params }) => {
     loadProperty();
   }, [id, fetchPropertyById]);
 
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    // Add your form submission logic here
-  };
+ const handleSubmit = async () => {
+  try {
+    if (!formData.name || !formData.email || !formData.phone) {
+      toast.error("Missing required fields");
+      return;
+    }
+
+    const res = await fetch("/api/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        property_id: property?.id || null, // pass from page params
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || "Failed");
+
+    toast.success("Message saved");
+  } catch (err) {
+    console.error("Frontend submit error:", err.message);
+  }
+};
+
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -200,16 +229,8 @@ const PropertyDetail = ({ params }) => {
 
         {/* Image Gallery */}
         <section className="bg-background py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Carousel items={propertyImages} height={500} baseWidth="100%" loop={true} />
-            <div className="grid grid-cols-4 md:grid-cols-7 gap-2 mt-4">
-              {propertyImages.map((img, idx) => (
-                <div key={idx} className="relative aspect-video rounded-md overflow-hidden cursor-pointer hover:opacity-75 transition-opacity border-2 border-border hover:border-accent">
-                  <img src={img.url} alt={img.alt} className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
-          </div>
+
+          <PropertyGallery propertyImages={propertyImages}/>
         </section>
 
         {/* Main Content */}
@@ -414,19 +435,10 @@ const PropertyDetail = ({ params }) => {
                       className="mt-1.5" 
                     />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="agent" 
-                      checked={formData.isAgent}
-                      onCheckedChange={(checked) => handleInputChange('isAgent', checked)}
-                    />
-                    <Label htmlFor="agent" className="text-sm font-normal cursor-pointer">
-                      I am a real estate agent
-                    </Label>
-                  </div>
+                 
                   <Button 
                     onClick={handleSubmit}
-                    className="w-full" 
+                    className="w-full bg-brand" 
                     variant="hero" 
                     size="lg"
                   >

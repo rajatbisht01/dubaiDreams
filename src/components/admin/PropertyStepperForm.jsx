@@ -366,7 +366,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
   );
 
   return (
-    <div className="p-2">
+    <div className="">
       <Stepper
         initialStep={1}
         stepCircleContainerClassName="bg-black/70"
@@ -380,16 +380,16 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
           <div className="space-y-4">
             <Label>Title</Label>
             <Input value={payload.title} onChange={(e) => setField("title", e.target.value)} placeholder="Title" />
-            <div className="flex items-center gap-2 mt-4">
+            <div className="flex items-center gap-2 mt-2">
               <Checkbox
                 checked={payload.isFeatured}
                 onCheckedChange={(v) => setField("isFeatured", v)}
               />
               <Label>Featured Property?</Label>
             </div>
-
+{/* 
             <Label>Slug (optional)</Label>
-            <Input value={payload.slug} onChange={(e) => setField("slug", e.target.value)} placeholder="slug" />
+            <Input value={payload.slug} onChange={(e) => setField("slug", e.target.value)} placeholder="slug" /> */}
 
             <Label>Description</Label>
             <Textarea className={'ring-1'} value={payload.description} onChange={(e) => setField("description", e.target.value)} />
@@ -538,38 +538,62 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
         {/* Step 5: Amenities */}
         <Step>
-          <div>
-            <Label>Choose Amenities</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-2">
-              {lookups.amenities.map((a) => (
-                <label key={a.id} className="flex items-center gap-2">
-                  <Checkbox checked={(payload.amenities || []).includes(a.id)} onCheckedChange={() => toggleAssoc("amenities", a.id)} />
-                  <span>{a.name}</span>
-                </label>
-              ))}
-            </div>
+  <div className="space-y-4">
 
-            <Label className="mt-4">Choose Features</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-2">
-              {lookups.features.map((f) => (
-                <label key={f.id} className="flex items-center gap-2">
-                  <Checkbox checked={(payload.features || []).includes(f.id)} onCheckedChange={() => toggleAssoc("features", f.id)} />
-                  <span>{f.name}</span>
-                </label>
-              ))}
-            </div>
+    {/* Amenities */}
+    <div>
+      <Label>Choose Amenities</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 
+                      max-h-64 overflow-y-auto border p-3 rounded-md">
+        {lookups.amenities.map((a) => (
+          <label key={a.id} className="flex items-center gap-2">
+            <Checkbox
+              checked={(payload.amenities || []).includes(a.id)}
+              onCheckedChange={() => toggleAssoc("amenities", a.id)}
+            />
+            <span className="text-sm">{a.name}</span>
+          </label>
+        ))}
+      </div>
+    </div>
 
-            <Label className="mt-4">Choose Views</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-2">
-              {lookups.viewTypes.map((v) => (
-                <label key={v.id} className="flex items-center gap-2">
-                  <Checkbox checked={(payload.views || []).includes(v.id)} onCheckedChange={() => toggleAssoc("views", v.id)} />
-                  <span>{v.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </Step>
+    {/* Features */}
+    <div>
+      <Label>Choose Features</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 
+                      max-h-64 overflow-y-auto border p-3 rounded-md">
+        {lookups.features.map((f) => (
+          <label key={f.id} className="flex items-center gap-2">
+            <Checkbox
+              checked={(payload.features || []).includes(f.id)}
+              onCheckedChange={() => toggleAssoc("features", f.id)}
+            />
+            <span className="text-sm">{f.name}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    {/* Views */}
+    <div>
+      <Label>Choose Views</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 
+                      max-h-64 overflow-y-auto border p-3 rounded-md">
+        {lookups.viewTypes.map((v) => (
+          <label key={v.id} className="flex items-center gap-2">
+            <Checkbox
+              checked={(payload.views || []).includes(v.id)}
+              onCheckedChange={() => toggleAssoc("views", v.id)}
+            />
+            <span className="text-sm">{v.name}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</Step>
+
 
         {/* Step 6: Nearby Points & Construction Updates */}
         <Step>
