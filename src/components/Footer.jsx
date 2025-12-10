@@ -22,9 +22,7 @@ const Footer = () => {
                  <img className="w-24 h-24" src="/assets/logo.png" alt="" />
 
                 <p className="text-secondary leading-relaxed">
-                  Your trusted partner for buying, selling, and renting properties in Dubai. 
-                  We specialize in luxury apartments, villas, and commercial spaces, offering 
-                  expert guidance and personalized services to make your real estate dreams a reality.
+                 Focused on Dubai’s most profitable off-plan projects—secure premium units at launch prices and maximize your ROI with expert guidance.
                 </p>
               </div>
               <div className="space-y-2">
