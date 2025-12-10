@@ -39,8 +39,7 @@ export const usePropertyStore = create((set, get) => ({
     }
   },
 
-  /* ---------------------- FETCH FILTER METADATA ---------------------- */
- /* ---------------------- FETCH FILTER METADATA (WITH CACHE) ---------------------- */
+  /* ---------------------- FETCH FILTERS WITH LOCALSTORAGE CACHE ---------------------- */
 fetchFilters: async () => {
   // Try reading from localStorage first
   const cached = localStorage.getItem("filtersMeta");

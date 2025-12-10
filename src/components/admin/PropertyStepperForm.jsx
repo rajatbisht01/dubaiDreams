@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, X } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PropertyStepperForm({ item = null, onClose = () => {}, onSuccess = () => {} }) {
@@ -60,6 +60,12 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     imageFiles: [],
     documentFiles: [],
     floorPlanFiles: [],
+    existingImages: [],
+    existingDocuments: [],
+    existingFloorPlans: [],
+    imagesToDelete: [],
+    documentsToDelete: [],
+    floorPlansToDelete: [],
   });
 
   useEffect(() => {
@@ -81,6 +87,8 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
   }
 
   function seedFromItem(it) {
+    console.log("Seeding form with item:", it); // Debug log
+    
     setPayload((p) => ({
       ...p,
       title: it.title || "",
@@ -107,14 +115,55 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       meta_description: it.meta_description || "",
       meta_keywords: it.meta_keywords || "",
       og_image_url: it.og_image_url || "",
-      amenities: Array.isArray(it.amenities) ? it.amenities.map(a => a.amenity_id || a.id) : [],
-      features: Array.isArray(it.features) ? it.features.map(f => f.feature_id || f.id) : [],
-      views: Array.isArray(it.views) ? it.views.map(v => v.view_type_id || v.id) : [],
+      
+      // Extract amenity IDs from property_amenities array
+      amenities: Array.isArray(it.property_amenities) 
+        ? it.property_amenities.map(a => a.amenity_id) 
+        : [],
+      
+      // Extract feature IDs from property_features array
+      features: Array.isArray(it.property_features) 
+        ? it.property_features.map(f => f.feature_id) 
+        : [],
+      
+      // Extract view type IDs from property_views array
+      views: Array.isArray(it.property_views) 
+        ? it.property_views.map(v => v.view_type_id) 
+        : [],
+      
+      // Nearby points
+      nearby_points: Array.isArray(it.property_nearby_points) 
+        ? it.property_nearby_points.map(np => ({
+            id: np.id,
+            category_id: np.category_id,
+            name: np.name || "",
+            distance_in_km: np.distance_in_km || "",
+            distance_in_minutes: np.distance_in_minutes || ""
+          })) 
+        : [],
+      
+      // Construction updates
+      construction_updates: Array.isArray(it.construction_updates) 
+        ? it.construction_updates.map(cu => ({
+            id: cu.id,
+            update_text: cu.update_text || "",
+            progress_percent: cu.progress_percent || "",
+            update_date: cu.update_date || ""
+          })) 
+        : [],
+      
+      // Existing media
+      existingImages: Array.isArray(it.property_images) ? it.property_images : [],
+      existingDocuments: Array.isArray(it.property_documents) ? it.property_documents : [],
+      existingFloorPlans: Array.isArray(it.floor_plans) ? it.floor_plans : [],
+      
+      // Reset file lists
       imageFiles: [],
       documentFiles: [],
       floorPlanFiles: [],
-      nearby_points: it.property_nearby_points || [],
-      construction_updates: it.construction_updates || [],
+      imagesToDelete: [],
+      documentsToDelete: [],
+      floorPlansToDelete: [],
     }));
   }
 
@@ -135,6 +184,30 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
   function handleFloorPlanFiles(e) {
     const files = Array.from(e.target.files || []).map((f) => ({ file: f, title: f.name, size: "" }));
     setPayload((p) => ({ ...p, floorPlanFiles: [...(p.floorPlanFiles || []), ...files] }));
+  }
+
+  function markExistingImageForDeletion(imageId) {
+    setPayload((p) => ({
+      ...p,
+      imagesToDelete: [...p.imagesToDelete, imageId],
+      existingImages: p.existingImages.filter(img => img.id !== imageId)
+    }));
+  }
+
+  function markExistingDocumentForDeletion(docId) {
+    setPayload((p) => ({
+      ...p,
+      documentsToDelete: [...p.documentsToDelete, docId],
+      existingDocuments: p.existingDocuments.filter(doc => doc.id !== docId)
+    }));
+  }
+
+  function markExistingFloorPlanForDeletion(fpId) {
+    setPayload((p) => ({
+      ...p,
+      floorPlansToDelete: [...p.floorPlansToDelete, fpId],
+      existingFloorPlans: p.existingFloorPlans.filter(fp => fp.id !== fpId)
+    }));
   }
 
   function addNearbyPoint() {
@@ -173,7 +246,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     setPayload((p) => {
       const next = [...(p.construction_updates || [])];
       next.splice(idx, 1);
-      return { ...p, nearby_points: next };
+      return { ...p, construction_updates: next };
     });
   }
 
@@ -186,7 +259,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     });
   }
 
-  // ULTRA-FAST: Parallel upload with no logging
   async function uploadFile(file, fileType) {
     const form = new FormData();
     form.append("file", file);
@@ -198,7 +270,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     return d.file;
   }
 
-  // OPTIMIZED: Single batched POST request
   async function postBatch(url, dataArray) {
     if (!dataArray.length) return;
     return Promise.allSettled(
@@ -212,15 +283,23 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     );
   }
 
+  async function deleteBatch(url, ids) {
+    if (!ids.length) return;
+    return Promise.allSettled(
+      ids.map(id =>
+        fetch(`${url}/${id}`, { method: "DELETE" })
+      )
+    );
+  }
+
   async function handleFinalSubmit() {
     setLoading(true);
     setError(null);
 
-    // IMMEDIATE CLOSE - Don't wait for completion
     const successMessage = isEdit ? "Property updated!" : "Property created!";
     
     try {
-      // Step 1: Build property payload first (no async)
+      // Build property payload
       const propertyPayload = {
         title: payload.title,
         isFeatured: payload.isFeatured,
@@ -249,9 +328,19 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
         amenities: payload.amenities || [],
         features: payload.features || [],
         views: payload.views || [],
+        nearby_points: payload.nearby_points || [],
+        construction_updates: payload.construction_updates || [],
       };
 
-      // Step 2: Save property FIRST (blocks only for property creation)
+      console.log("[Form Submit] Payload:", {
+        amenities: propertyPayload.amenities,
+        features: propertyPayload.features,
+        views: propertyPayload.views,
+        nearby_count: propertyPayload.nearby_points?.length,
+        updates_count: propertyPayload.construction_updates?.length
+      });
+
+      // Save property FIRST
       const url = isEdit ? `/api/admin/properties/${item.id}` : `/api/admin/properties`;
       const method = isEdit ? "PUT" : "POST";
 
@@ -271,16 +360,23 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
       if (!propertyId) throw new Error("No property ID returned");
 
-      // CRITICAL: Close modal immediately after property is saved
+      // Close modal immediately
       toast.success(successMessage);
       onSuccess();
       onClose();
       setLoading(false);
 
-      // Step 3: Continue uploads in background (fire and forget)
+      // Continue uploads/deletions in background
       (async () => {
         try {
-          // Upload all files in parallel
+          // Delete marked items
+          await Promise.allSettled([
+            deleteBatch(`/api/properties/${propertyId}/images`, payload.imagesToDelete),
+            deleteBatch(`/api/properties/${propertyId}/documents`, payload.documentsToDelete),
+            deleteBatch(`/api/properties/${propertyId}/floor-plans`, payload.floorPlansToDelete),
+          ]);
+
+          // Upload new files in parallel
           const [imageUrls, documentData, floorPlanData] = await Promise.all([
             Promise.all((payload.imageFiles || []).map(f => uploadFile(f, "image"))),
             Promise.all((payload.documentFiles || []).map(async (d) => ({
@@ -295,7 +391,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             })))
           ]);
 
-          // Batch all POST operations in parallel
+          // Batch POST new items
           await Promise.allSettled([
             postBatch(
               `/api/properties/${propertyId}/images`,
@@ -322,20 +418,11 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                 pdf_url: fp.url,
               }))
             ),
-            postBatch(
-              `/api/properties/${propertyId}/nearby-points`,
-              (payload.nearby_points || []).filter(np => np.name && np.category_id)
-            ),
-            postBatch(
-              `/api/properties/${propertyId}/construction-updates`,
-              (payload.construction_updates || []).filter(cu => cu.update_text)
-            ),
           ]);
 
         } catch (bgErr) {
           console.error("Background upload error:", bgErr);
-          // Show a subtle notification that media upload failed
-          toast.error("Some media uploads failed. Please re-edit the property to upload them.");
+          toast.error("Some media uploads failed. Please re-edit the property.");
         }
       })();
 
@@ -355,7 +442,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     });
   }
 
-  // Memoize image previews to avoid re-creating object URLs
   const imagePreviews = useMemo(() => 
     (payload.imageFiles || []).map((f, i) => ({
       url: URL.createObjectURL(f),
@@ -387,9 +473,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
               />
               <Label>Featured Property?</Label>
             </div>
-{/* 
-            <Label>Slug (optional)</Label>
-            <Input value={payload.slug} onChange={(e) => setField("slug", e.target.value)} placeholder="slug" /> */}
 
             <Label>Description</Label>
             <Textarea className={'ring-1'} value={payload.description} onChange={(e) => setField("description", e.target.value)} />
@@ -476,7 +559,29 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
         {/* Step 3: Images */}
         <Step>
           <div>
-            <Label>Upload Images (multiple files supported)</Label>
+            {/* Existing Images */}
+            {isEdit && payload.existingImages.length > 0 && (
+              <div className="mb-6">
+                <Label>Existing Images</Label>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  {payload.existingImages.map((img) => (
+                    <div key={img.id} className="p-1 border rounded relative group">
+                      <img src={img.image_url} alt="property" className="w-full h-24 object-cover rounded" />
+                      <button 
+                        type="button" 
+                        onClick={() => markExistingImageForDeletion(img.id)} 
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* New Images */}
+            <Label>Upload New Images</Label>
             <label className="block mt-2">
               <input type="file" accept="image/*" multiple onChange={handleImageFiles} />
             </label>
@@ -488,7 +593,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                   <button type="button" onClick={() => removeFileFromList("imageFiles", index)} className="absolute top-1 right-1 bg-white rounded px-1">×</button>
                 </div>
               ))}
-              {imagePreviews.length === 0 && (
+              {imagePreviews.length === 0 && !isEdit && (
                 <div className="col-span-3 text-center text-sm text-muted-foreground p-6 border rounded">
                   <ImageIcon className="mx-auto mb-2" />
                   No images selected
@@ -500,8 +605,23 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
         {/* Step 4: Documents & Floor Plans */}
         <Step>
+          {/* Existing Documents */}
+          {isEdit && payload.existingDocuments.length > 0 && (
+            <div className="space-y-2 mb-6">
+              <Label>Existing Documents</Label>
+              {payload.existingDocuments.map((doc) => (
+                <div key={doc.id} className="flex gap-2 items-center border p-2 rounded">
+                  <span className="flex-1">{doc.title}</span>
+                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm">View</a>
+                  <button onClick={() => markExistingDocumentForDeletion(doc.id)} className="text-red-600">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* New Documents */}
           <div className="space-y-3 mb-8">
-            <Label>Upload Documents (Brochure, RERA, etc)</Label>
+            <Label>Upload New Documents (Brochure, RERA, etc)</Label>
             <input type="file" multiple onChange={handleDocumentFiles} />
             {(payload.documentFiles || []).map((d, idx) => (
               <div key={idx} className="flex gap-2 items-center">
@@ -518,9 +638,24 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
               </div>
             ))}
           </div>
+
+          {/* Existing Floor Plans */}
+          {isEdit && payload.existingFloorPlans.length > 0 && (
+            <div className="space-y-2 mb-6">
+              <Label>Existing Floor Plans</Label>
+              {payload.existingFloorPlans.map((fp) => (
+                <div key={fp.id} className="flex gap-2 items-center border p-2 rounded">
+                  <span className="flex-1">{fp.title} {fp.size && `(${fp.size})`}</span>
+                  <a href={fp.pdf_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm">View</a>
+                  <button onClick={() => markExistingFloorPlanForDeletion(fp.id)} className="text-red-600">×</button>
+                </div>
+              ))}
+            </div>
+          )}
           
+          {/* New Floor Plans */}
           <div className="space-y-3">
-            <Label>Upload Floor Plans (PDF)</Label>
+            <Label>Upload New Floor Plans (PDF)</Label>
             <input type="file" accept="application/pdf" multiple onChange={handleFloorPlanFiles} />
             {(payload.floorPlanFiles || []).map((d, idx) => (
               <div key={idx} className="flex gap-2 items-center">
@@ -538,62 +673,53 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
         {/* Step 5: Amenities */}
         <Step>
-  <div className="space-y-4">
+          <div className="space-y-4">
+            <div>
+              <Label>Choose Amenities</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
+                {lookups.amenities.map((a) => (
+                  <label key={a.id} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={(payload.amenities || []).includes(a.id)}
+                      onCheckedChange={() => toggleAssoc("amenities", a.id)}
+                    />
+                    <span className="text-sm">{a.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
-    {/* Amenities */}
-    <div>
-      <Label>Choose Amenities</Label>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 
-                      max-h-64 overflow-y-auto border p-3 rounded-md">
-        {lookups.amenities.map((a) => (
-          <label key={a.id} className="flex items-center gap-2">
-            <Checkbox
-              checked={(payload.amenities || []).includes(a.id)}
-              onCheckedChange={() => toggleAssoc("amenities", a.id)}
-            />
-            <span className="text-sm">{a.name}</span>
-          </label>
-        ))}
-      </div>
-    </div>
+            <div>
+              <Label>Choose Features</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
+                {lookups.features.map((f) => (
+                  <label key={f.id} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={(payload.features || []).includes(f.id)}
+                      onCheckedChange={() => toggleAssoc("features", f.id)}
+                    />
+                    <span className="text-sm">{f.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
-    {/* Features */}
-    <div>
-      <Label>Choose Features</Label>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 
-                      max-h-64 overflow-y-auto border p-3 rounded-md">
-        {lookups.features.map((f) => (
-          <label key={f.id} className="flex items-center gap-2">
-            <Checkbox
-              checked={(payload.features || []).includes(f.id)}
-              onCheckedChange={() => toggleAssoc("features", f.id)}
-            />
-            <span className="text-sm">{f.name}</span>
-          </label>
-        ))}
-      </div>
-    </div>
-
-    {/* Views */}
-    <div>
-      <Label>Choose Views</Label>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 
-                      max-h-64 overflow-y-auto border p-3 rounded-md">
-        {lookups.viewTypes.map((v) => (
-          <label key={v.id} className="flex items-center gap-2">
-            <Checkbox
-              checked={(payload.views || []).includes(v.id)}
-              onCheckedChange={() => toggleAssoc("views", v.id)}
-            />
-            <span className="text-sm">{v.name}</span>
-          </label>
-        ))}
-      </div>
-    </div>
-
-  </div>
-</Step>
-
+            <div>
+              <Label>Choose Views</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
+                {lookups.viewTypes.map((v) => (
+                  <label key={v.id} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={(payload.views || []).includes(v.id)}
+                      onCheckedChange={() => toggleAssoc("views", v.id)}
+                    />
+                    <span className="text-sm">{v.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Step>
 
         {/* Step 6: Nearby Points & Construction Updates */}
         <Step>
@@ -644,9 +770,12 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
               <p><strong>Type:</strong> {lookups.propertyTypes.find(t=>t.id===payload.property_type_id)?.name || "-"}</p>
               <p><strong>Status:</strong> {lookups.statusTypes.find(s=>s.id===payload.status_id)?.name || "-"}</p>
               <p><strong>Starting Price:</strong> {payload.starting_price || "-"}</p>
-              <p><strong>Images:</strong> {(payload.imageFiles || []).length} files</p>
-              <p><strong>Documents:</strong> {(payload.documentFiles || []).length} files</p>
-              <p><strong>Floor Plans:</strong> {(payload.floorPlanFiles || []).length} files</p>
+              <p><strong>Existing Images:</strong> {payload.existingImages.length}</p>
+              <p><strong>New Images:</strong> {(payload.imageFiles || []).length} files</p>
+              <p><strong>Existing Documents:</strong> {payload.existingDocuments.length}</p>
+              <p><strong>New Documents:</strong> {(payload.documentFiles || []).length} files</p>
+              <p><strong>Existing Floor Plans:</strong> {payload.existingFloorPlans.length}</p>
+              <p><strong>New Floor Plans:</strong> {(payload.floorPlanFiles || []).length} files</p>
             </div>
 
             <div className="flex justify-end gap-2">

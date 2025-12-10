@@ -4,12 +4,10 @@ import React, { useEffect, useState } from "react";
 import { usePropertyStore } from "@/store/propertyStore";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MapPin, Bed, Bath, Square, Building2, Calendar, TrendingUp, DollarSign, FileText, Navigation, Clock, Award, CheckCircle2, Download } from "lucide-react";
-import Carousel from "@/components/ui/carousel";
+import { MapPin, Bed, Bath, Square, Building2, Calendar, TrendingUp, DollarSign, FileText, Navigation, Clock, Award, CheckCircle2, Download, Hammer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { use } from "react";
 import { toast } from "sonner";
@@ -27,7 +25,6 @@ const PropertyDetail = ({ params }) => {
     phone: '',
     email: '',
     message: '',
-  
   });
 
   const resolvedParams = use(params);
@@ -36,7 +33,25 @@ const PropertyDetail = ({ params }) => {
   useEffect(() => {
     const loadProperty = async () => {
       const data = await fetchPropertyById(id);
+      console.log("Loaded property data:", data);
+      
       if (data) {
+        // Extract amenity names from property_amenities
+        const amenityNames = data.property_amenities?.map((item) => {
+          // Handle both nested and flat structures
+          return item.amenity?.name || item.name || null;
+        }).filter(Boolean) || [];
+
+        // Extract feature names from property_features
+        const featureNames = data.property_features?.map((item) => {
+          return item.feature?.name || item.name || null;
+        }).filter(Boolean) || [];
+
+        // Extract view names from property_views
+        const viewNames = data.property_views?.map((item) => {
+          return item.view?.name || item.name || null;
+        }).filter(Boolean) || [];
+
         const flatProperty = {
           ...data,
           developer: data.developers?.name || "Unknown Developer",
@@ -44,9 +59,9 @@ const PropertyDetail = ({ params }) => {
           community: data.communities?.name || "Unknown Community",
           type: data.property_types?.name || "Unknown Type",
           status: data.property_status_types?.name || "Unknown Status",
-          amenities: data.property_amenities?.map((a) => a.amenity.name) || [],
-          features: data.property_features?.map((f) => f.feature.name) || [],
-          views: data.property_views?.map((v) => v.view.name) || [],
+          amenities: amenityNames,
+          features: featureNames,
+          views: viewNames,
           documents: data.property_documents || [],
           nearbyPoints: data.property_nearby_points || [],
           floorPlans: data.floor_plans || [],
@@ -54,6 +69,14 @@ const PropertyDetail = ({ params }) => {
           media: data.property_media || [],
           constructionUpdates: data.construction_updates || [],
         };
+
+        console.log("Processed property:", {
+          amenities: flatProperty.amenities,
+          features: flatProperty.features,
+          views: flatProperty.views,
+          nearbyPoints: flatProperty.nearbyPoints.length,
+          constructionUpdates: flatProperty.constructionUpdates.length
+        });
 
         setProperty(flatProperty);
 
@@ -71,37 +94,38 @@ const PropertyDetail = ({ params }) => {
     loadProperty();
   }, [id, fetchPropertyById]);
 
- const handleSubmit = async () => {
-  try {
-    if (!formData.name || !formData.email || !formData.phone) {
-      toast.error("Missing required fields");
-      return;
+  const handleSubmit = async () => {
+    try {
+      if (!formData.name || !formData.email || !formData.phone) {
+        toast.error("Missing required fields");
+        return;
+      }
+
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          property_id: property?.id || null,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Failed");
+
+      toast.success("Message sent successfully!");
+      setFormData({ name: '', phone: '', email: '', message: '' });
+    } catch (err) {
+      console.error("Frontend submit error:", err.message);
+      toast.error("Failed to send message");
     }
-
-    const res = await fetch("/api/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        property_id: property?.id || null, // pass from page params
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        message: formData.message
-      })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.error || "Failed");
-
-    toast.success("Message saved");
-  } catch (err) {
-    console.error("Frontend submit error:", err.message);
-  }
-};
-
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -116,9 +140,9 @@ const PropertyDetail = ({ params }) => {
   }
 
   const keyStats = [
-    { icon: Bed, label: "Bedrooms", value: property.bedrooms },
-    { icon: Bath, label: "Bathrooms", value: property.bathrooms },
-    { icon: Square, label: "Size Range", value: `${property.size_range} sq ft` },
+    { icon: Bed, label: "Bedrooms", value: property.bedrooms || "N/A" },
+    { icon: Bath, label: "Bathrooms", value: property.bathrooms || "N/A" },
+    { icon: Square, label: "Size Range", value: property.size_range ? `${property.size_range} sq ft` : "N/A" },
     { icon: Building2, label: "Type", value: property.type },
   ];
 
@@ -138,6 +162,11 @@ const PropertyDetail = ({ params }) => {
     acc[category].push(point);
     return acc;
   }, {});
+
+  const hasAmenities = property.property_amenities && property.property_amenities.length > 0;
+  const hasFeatures = property.property_features && property.property_features.length > 0;
+  const hasViews = property.property_views && property.property_views.length > 0;
+  const showTabs = hasAmenities || hasFeatures || hasViews;
 
   return (
     <div className="min-h-screen bg-background">
@@ -229,7 +258,6 @@ const PropertyDetail = ({ params }) => {
 
         {/* Image Gallery */}
         <section className="bg-background py-8">
-
           <PropertyGallery propertyImages={propertyImages}/>
         </section>
 
@@ -241,7 +269,7 @@ const PropertyDetail = ({ params }) => {
               {property.description && (
                 <Card className="p-6">
                   <h2 className="font-serif text-2xl font-bold text-primary mb-4">About This Property</h2>
-                  <p className="text-muted-foreground leading-relaxed">{property.description}</p>
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{property.description}</p>
                 </Card>
               )}
 
@@ -267,51 +295,112 @@ const PropertyDetail = ({ params }) => {
               )}
 
               {/* Tabs for Amenities, Features, Views */}
-              {(property.amenities.length > 0 || property.features.length > 0 || property.views.length > 0) && (
+              {showTabs && (
                 <Card className="p-6">
-                  <Tabs defaultValue="amenities" className="w-full">
+                  <h2 className="font-serif text-2xl font-bold text-primary mb-4">Property Highlights</h2>
+                  <Tabs defaultValue={hasAmenities ? "amenities" : hasFeatures ? "features" : "views"} className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
-                      {property.amenities.length > 0 && <TabsTrigger value="amenities">Amenities</TabsTrigger>}
-                      {property.features.length > 0 && <TabsTrigger value="features">Features</TabsTrigger>}
-                      {property.views.length > 0 && <TabsTrigger value="views">Views</TabsTrigger>}
+                      {hasAmenities && <TabsTrigger value="amenities">Amenities ({property.property_amenities.length})</TabsTrigger>}
+                      {hasFeatures && <TabsTrigger value="features">Features ({property.property_features.length})</TabsTrigger>}
+                      {hasViews && <TabsTrigger value="views">Views ({property.property_views.length})</TabsTrigger>}
                     </TabsList>
-                    {property.amenities.length > 0 && (
+                    
+                    {hasAmenities && (
                       <TabsContent value="amenities" className="mt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {property.amenities.map((amenity, i) => (
-                            <div key={i} className="flex items-center gap-2">
+                          {property.property_amenities.map((amenity, i) => (
+                            <div key={i} className="flex items-center gap-2 p-2 rounded hover:bg-muted/30 transition-colors">
                               <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0" />
-                              <span className="text-muted-foreground">{amenity}</span>
+                              <span className="text-muted-foreground">{amenity.amenities?.name}</span>
                             </div>
                           ))}
                         </div>
                       </TabsContent>
                     )}
-                    {property.features.length > 0 && (
+                    
+                    {hasFeatures && (
                       <TabsContent value="features" className="mt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {property.features.map((feature, i) => (
-                            <div key={i} className="flex items-center gap-2">
+                          {property.property_features.map((feature, i) => (
+                            <div key={i} className="flex items-center gap-2 p-2 rounded hover:bg-muted/30 transition-colors">
                               <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0" />
-                              <span className="text-muted-foreground">{feature}</span>
+                              <span className="text-muted-foreground">{feature.features?.name}</span>
                             </div>
                           ))}
                         </div>
                       </TabsContent>
                     )}
-                    {property.views.length > 0 && (
+                    
+                    {hasViews && (
                       <TabsContent value="views" className="mt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {property.views.map((view, i) => (
-                            <div key={i} className="flex items-center gap-2">
+                          {property.property_views.map((view, i) => (
+                            <div key={i} className="flex items-center gap-2 p-2 rounded hover:bg-muted/30 transition-colors">
                               <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0" />
-                              <span className="text-muted-foreground">{view}</span>
+                              <span className="text-muted-foreground">{view.view_types?.name}</span>
                             </div>
                           ))}
                         </div>
                       </TabsContent>
                     )}
                   </Tabs>
+                </Card>
+              )}
+
+              {/* Construction Updates */}
+              {property.constructionUpdates && property.constructionUpdates.length > 0 && (
+                <Card className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Hammer className="h-6 w-6 text-accent" />
+                    <h2 className="font-serif text-2xl font-bold text-primary">Construction Progress</h2>
+                  </div>
+                  <div className="space-y-4">
+                    {property.constructionUpdates.map((update) => (
+                      <div key={update.id} className="border-l-4 border-accent pl-4 py-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-muted-foreground">
+                            {update.update_date ? new Date(update.update_date).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            }) : 'Date not specified'}
+                          </span>
+                          {update.progress_percent !== null && (
+                            <span className="text-sm font-semibold text-accent">
+                              {update.progress_percent}% Complete
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground">{update.update_text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {/* Floor Plans */}
+              {property.floorPlans && property.floorPlans.length > 0 && (
+                <Card className="p-6">
+                  <h2 className="font-serif text-2xl font-bold text-primary mb-4">Floor Plans</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {property.floorPlans.map((plan) => (
+                      <a
+                        key={plan.id}
+                        href={plan.pdf_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="p-2 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors">
+                          <FileText className="h-5 w-5 text-accent" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground">{plan.size} sqft</p>
+                        </div>
+                        <Download className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
+                      </a>
+                    ))}
+                  </div>
                 </Card>
               )}
 
@@ -325,14 +414,14 @@ const PropertyDetail = ({ params }) => {
                         <h3 className="font-semibold text-lg mb-2 text-primary/80">{category}</h3>
                         <div className="space-y-2">
                           {points.map((point) => (
-                            <div key={point.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                            <div key={point.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/40 transition-colors">
                               <div className="flex items-center gap-3">
                                 <Navigation className="h-4 w-4 text-accent" />
                                 <span className="text-muted-foreground">{point.name}</span>
                               </div>
                               <div className="flex items-center gap-4 text-sm">
                                 {point.distance_in_km && (
-                                  <span className="text-muted-foreground">{point.distance_in_km} km</span>
+                                  <span className="text-muted-foreground font-medium">{point.distance_in_km} km</span>
                                 )}
                                 {point.distance_in_minutes && (
                                   <div className="flex items-center gap-1">
@@ -367,8 +456,7 @@ const PropertyDetail = ({ params }) => {
                           <Download className="h-5 w-5 text-accent" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-foreground">{doc.title}</p>
-                          <p className="text-xs text-muted-foreground">{doc.document_types?.name}</p>
+                          <p className="font-medium text-foreground">{doc.document_types?.name || 'Document'}</p>
                         </div>
                       </a>
                     ))}
@@ -376,8 +464,8 @@ const PropertyDetail = ({ params }) => {
                 </Card>
               )}
 
-               {/* Developer Info Card */}
-              <Card className="p-6 mt-4  bottom-10">
+              {/* Developer Info Card - Mobile */}
+              <Card className="p-6 lg:hidden">
                 <h3 className="font-semibold text-lg mb-3">Developer</h3>
                 {property.developerLogo && (
                   <img src={property.developerLogo} alt={property.developer} className="h-12 mb-3" />
@@ -387,8 +475,8 @@ const PropertyDetail = ({ params }) => {
             </div>
 
             {/* Contact Form Sidebar */}
-            <div className="space-y-6">
-              <Card className="p-6 sticky top-24">
+            <div className="space-y-6 sticky top-24">
+              <Card className="p-6 ">
                 <h3 className="font-serif text-xl font-bold text-primary mb-2">Interested in this property?</h3>
                 <p className="text-sm text-muted-foreground mb-6">Fill out the form and we'll get back to you shortly.</p>
                 <div className="space-y-4">
@@ -450,7 +538,14 @@ const PropertyDetail = ({ params }) => {
                 </div>
               </Card>
 
-             
+              {/* Developer Info Card - Desktop */}
+              <Card className="p-6  hidden lg:block">
+                <h3 className="font-semibold text-lg mb-3">Developer</h3>
+                {property.developerLogo && (
+                  <img src={property.developerLogo} alt={property.developer} className="h-12 mb-3" />
+                )}
+                <p className="font-medium text-primary">{property.developer}</p>
+              </Card>
             </div>
           </div>
         </div>

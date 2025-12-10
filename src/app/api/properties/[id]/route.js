@@ -19,7 +19,7 @@ export async function GET(req, { params }) {
 
         property_images(*),
         floor_plans(*),
-        property_documents(*),
+        property_documents(*, document_types(id, name)),
         property_media(*),
 
         property_features(

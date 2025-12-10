@@ -94,8 +94,22 @@ const AdminPage = () => {
     }
   };
 
-  const handleEdit = (item) => setDrawerItem(item);
-
+  
+// Example: In your properties list/table component
+async function handleEdit(item) {
+  const propertyId = item.id;
+  try {
+    // Fetch complete property data with all relations
+    const res = await fetch(`/api/admin/properties/${propertyId}`);
+    const propertyData = await res.json();
+    
+    // Open the form with complete data
+    setDrawerItem(propertyData);
+  } catch (err) {
+    console.error("Failed to fetch property", err);
+    toast.error("Failed to load property data");
+  }
+}
   return (
     <div className="min-h-screen bg-background md:px-4">
       <div className="container mx-auto px-3 sm:px-4 py-8">
