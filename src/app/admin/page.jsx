@@ -203,9 +203,11 @@ async function handleEdit(item) {
             <TabsTrigger value="views" className="gap-2">
               <Eye className="h-4 w-4" /> <span className="hidden sm:inline">Views</span>
             </TabsTrigger>
+            {profile?.role === "superAdmin" && (
             <TabsTrigger value="users" className="gap-2">
               <ShieldCheck className="h-4 w-4" /> <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
+             )}
           </TabsList>
 
           {/* Properties */}

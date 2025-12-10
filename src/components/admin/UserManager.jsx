@@ -209,7 +209,7 @@ const UserManager = ({ onUpdate }) => {
                       </TableCell>
                       <TableCell>
                         <Button
-                          variant="ghost"
+                          variant="primary"
                           size="sm"
                           onClick={() => handleChangeRole(user)}
                         >
@@ -322,7 +322,7 @@ const UserManager = ({ onUpdate }) => {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateRole}>
+            <Button className='bg-brand' onClick={handleUpdateRole}>
               Update Role
             </Button>
           </DialogFooter>

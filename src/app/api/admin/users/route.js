@@ -1,13 +1,15 @@
 // app/api/admin/users/route.ts
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
 
 export async function GET(request) {
   try {
-    const supabase = await supabaseServer();
-
+    const supabase =  supabaseAdmin;
+     const supaServer = await supabaseServer();
     // Get current user to check if they're superAdmin
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supaServer.auth.getUser();
     
     if (!user) {
       return NextResponse.json(
