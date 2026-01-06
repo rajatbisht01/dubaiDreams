@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { usePropertyStore } from "@/store/propertyStore";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,14 +12,65 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { use } from "react";
 import { toast } from "sonner";
 import PropertyGallery from "@/components/property/PropertyGallery";
+import AnimatedPropertyGrid from "@/components/AnimatedPropertyGrid";
+
+// Helper function to flatten property data (moved outside component)
+const flattenPropertyData = (data) => {
+  const amenityNames = data.property_amenities?.map((item) => 
+    item.amenity?.name || item.name || null
+  ).filter(Boolean) || [];
+
+  const featureNames = data.property_features?.map((item) => 
+    item.feature?.name || item.name || null
+  ).filter(Boolean) || [];
+
+  const viewNames = data.property_views?.map((item) => 
+    item.view?.name || item.name || null
+  ).filter(Boolean) || [];
+
+  return {
+    ...data,
+    developer: data.developers?.name || "Unknown Developer",
+    developerLogo: data.developers?.logo_url || null,
+    community: data.communities?.name || "Unknown Community",
+    type: data.property_types?.name || "Unknown Type",
+    status: data.property_status_types?.name || "Unknown Status",
+    amenities: amenityNames,
+    features: featureNames,
+    views: viewNames,
+    documents: data.property_documents || [],
+    nearbyPoints: data.property_nearby_points || [],
+    floorPlans: data.floor_plans || [],
+    paymentPlans: data.payment_plans || [],
+    media: data.property_media || [],
+    constructionUpdates: data.construction_updates || [],
+  };
+};
+
+// Calculate similar properties score (moved outside component)
+const calculateSimilarityScore = (p, currentProperty) => {
+  let score = 0;
+  
+  if (p.property_type_id === currentProperty.property_type_id) score += 5;
+  if (p.community_id === currentProperty.community_id) score += 4;
+  
+  if (p.starting_price && currentProperty.starting_price) {
+    const priceDiff = Math.abs(p.starting_price - currentProperty.starting_price);
+    const priceRange = currentProperty.starting_price * 0.3;
+    if (priceDiff <= priceRange) score += 3;
+  }
+  
+  if (p.developer_id === currentProperty.developer_id) score += 2;
+  if (p.bedrooms === currentProperty.bedrooms) score += 1;
+  
+  return score;
+};
 
 const PropertyDetail = ({ params }) => {
-  const { fetchPropertyById, loading } = usePropertyStore();
+  const { fetchPropertyById, fetchProperties, loading } = usePropertyStore();
 
   const [property, setProperty] = useState(null);
-  const [propertyImages, setPropertyImages] = useState([
-    { url: "/assets/property-placeholder.jpg", alt: "Loading..." },
-  ]);
+  const [similarProperties, setSimilarProperties] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -30,71 +81,127 @@ const PropertyDetail = ({ params }) => {
   const resolvedParams = use(params);
   const { id } = resolvedParams;
 
+  // Memoize property images to prevent recalculation
+  const propertyImages = useMemo(() => {
+    if (!property) {
+      return [{ url: "/assets/property-placeholder.jpg", alt: "Loading..." }];
+    }
+    
+    return property.property_images?.length > 0
+      ? property.property_images.map((img, index) => ({
+          url: img.image_url,
+          alt: property.title || `Property image ${index + 1}`,
+        }))
+      : [{ url: "/assets/property-placeholder.jpg", alt: "No Image" }];
+  }, [property?.property_images, property?.title]);
+
+  // Memoize key stats to prevent recalculation
+  const keyStats = useMemo(() => [
+    { icon: Bed, label: "Bedrooms", value: property?.bedrooms || "N/A" },
+    { icon: Bath, label: "Bathrooms", value: property?.bathrooms || "N/A" },
+    { icon: Square, label: "Size Range", value: property?.size_range ? `${property.size_range} sq ft` : "N/A" },
+    { icon: Building2, label: "Type", value: property?.type || "N/A" },
+  ], [property?.bedrooms, property?.bathrooms, property?.size_range, property?.type]);
+
+  // Memoize financial details
+  const financialDetails = useMemo(() => {
+    if (!property) return [];
+    
+    return [
+      { icon: DollarSign, label: "Price Range", value: property.price_range ? `AED ${property.price_range}` : null },
+      { icon: TrendingUp, label: "ROI", value: property.roi ? `${property.roi}%` : null },
+      { icon: FileText, label: "Service Charge", value: property.service_charge ? `${property.service_charge}%` : null },
+      { icon: DollarSign, label: "Annual Rent", value: property.annual_rent ? `AED ${property.annual_rent.toLocaleString()}` : null },
+      { icon: TrendingUp, label: "Estimated Yield", value: property.estimated_yield ? `${property.estimated_yield}%` : null },
+      { icon: Square, label: "Market Price PSF", value: property.market_price_psf ? `AED ${property.market_price_psf}` : null },
+      { icon: Square, label: "Rental Price PSF", value: property.rental_price_psf ? `AED ${property.rental_price_psf}` : null },
+    ].filter(item => item.value);
+  }, [property]);
+
+  // Memoize nearby points by category
+  const nearbyByCategory = useMemo(() => {
+    if (!property?.nearbyPoints) return {};
+    
+    return property.nearbyPoints.reduce((acc, point) => {
+      const category = point.nearby_categories?.name || "Other";
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(point);
+      return acc;
+    }, {});
+  }, [property?.nearbyPoints]);
+
+  // Memoize tab visibility flags
+  const tabFlags = useMemo(() => ({
+    hasAmenities: property?.property_amenities?.length > 0,
+    hasFeatures: property?.property_features?.length > 0,
+    hasViews: property?.property_views?.length > 0,
+  }), [property?.property_amenities, property?.property_features, property?.property_views]);
+
+  const showTabs = tabFlags.hasAmenities || tabFlags.hasFeatures || tabFlags.hasViews;
+
+  // Memoize default tab value
+  const defaultTab = useMemo(() => {
+    if (tabFlags.hasAmenities) return "amenities";
+    if (tabFlags.hasFeatures) return "features";
+    return "views";
+  }, [tabFlags]);
+
+  // Load similar properties (memoized with useCallback)
+  const loadSimilarProperties = useCallback(async (currentProperty) => {
+    try {
+      const allProperties = await fetchProperties();
+      
+      if (!allProperties?.length) {
+        console.log("No properties available for similar properties");
+        return;
+      }
+
+      const scored = allProperties
+        .filter(p => p.id !== currentProperty.id)
+        .map(p => ({ property: p, score: calculateSimilarityScore(p, currentProperty) }))
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 4)
+        .map(item => item.property);
+
+      setSimilarProperties(scored);
+    } catch (error) {
+      console.error("Error loading similar properties:", error);
+    }
+  }, [fetchProperties]);
+
+  // Main property load effect
   useEffect(() => {
+    let isMounted = true;
+
     const loadProperty = async () => {
       const data = await fetchPropertyById(id);
-      console.log("Loaded property data:", data);
+      
+      if (!isMounted) return;
       
       if (data) {
-        // Extract amenity names from property_amenities
-        const amenityNames = data.property_amenities?.map((item) => {
-          // Handle both nested and flat structures
-          return item.amenity?.name || item.name || null;
-        }).filter(Boolean) || [];
-
-        // Extract feature names from property_features
-        const featureNames = data.property_features?.map((item) => {
-          return item.feature?.name || item.name || null;
-        }).filter(Boolean) || [];
-
-        // Extract view names from property_views
-        const viewNames = data.property_views?.map((item) => {
-          return item.view?.name || item.name || null;
-        }).filter(Boolean) || [];
-
-        const flatProperty = {
-          ...data,
-          developer: data.developers?.name || "Unknown Developer",
-          developerLogo: data.developers?.logo_url || null,
-          community: data.communities?.name || "Unknown Community",
-          type: data.property_types?.name || "Unknown Type",
-          status: data.property_status_types?.name || "Unknown Status",
-          amenities: amenityNames,
-          features: featureNames,
-          views: viewNames,
-          documents: data.property_documents || [],
-          nearbyPoints: data.property_nearby_points || [],
-          floorPlans: data.floor_plans || [],
-          paymentPlans: data.payment_plans || [],
-          media: data.property_media || [],
-          constructionUpdates: data.construction_updates || [],
-        };
-
-        console.log("Processed property:", {
-          amenities: flatProperty.amenities,
-          features: flatProperty.features,
-          views: flatProperty.views,
-          nearbyPoints: flatProperty.nearbyPoints.length,
-          constructionUpdates: flatProperty.constructionUpdates.length
-        });
-
+        const flatProperty = flattenPropertyData(data);
         setProperty(flatProperty);
-
-        const images =
-          data.property_images?.length > 0
-            ? data.property_images.map((img, index) => ({
-                url: img.image_url,
-                alt: data.title || `Property image ${index + 1}`,
-              }))
-            : [{ url: "/assets/property-placeholder.jpg", alt: "No Image" }];
-
-        setPropertyImages(images);
+        
+        // Load similar properties in parallel (don't wait)
+        loadSimilarProperties(data);
       }
     };
+    
     loadProperty();
-  }, [id, fetchPropertyById]);
 
-  const handleSubmit = async () => {
+    return () => {
+      isMounted = false;
+    };
+  }, [id, fetchPropertyById, loadSimilarProperties]);
+
+  // Handle form input changes (memoized)
+  const handleInputChange = useCallback((field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  // Handle form submission (memoized)
+  const handleSubmit = useCallback(async () => {
     try {
       if (!formData.name || !formData.email || !formData.phone) {
         toast.error("Missing required fields");
@@ -103,9 +210,7 @@ const PropertyDetail = ({ params }) => {
 
       const res = await fetch("/api/messages", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           property_id: property?.id || null,
           name: formData.name,
@@ -116,7 +221,6 @@ const PropertyDetail = ({ params }) => {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || "Failed");
 
       toast.success("Message sent successfully!");
@@ -125,11 +229,7 @@ const PropertyDetail = ({ params }) => {
       console.error("Frontend submit error:", err.message);
       toast.error("Failed to send message");
     }
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  }, [formData, property?.id]);
 
   if (loading || !property) {
     return (
@@ -138,35 +238,6 @@ const PropertyDetail = ({ params }) => {
       </div>
     );
   }
-
-  const keyStats = [
-    { icon: Bed, label: "Bedrooms", value: property.bedrooms || "N/A" },
-    { icon: Bath, label: "Bathrooms", value: property.bathrooms || "N/A" },
-    { icon: Square, label: "Size Range", value: property.size_range ? `${property.size_range} sq ft` : "N/A" },
-    { icon: Building2, label: "Type", value: property.type },
-  ];
-
-  const financialDetails = [
-    { icon: DollarSign, label: "Price Range", value: property.price_range ? `AED ${property.price_range}` : null },
-    { icon: TrendingUp, label: "ROI", value: property.roi ? `${property.roi}%` : null },
-    { icon: FileText, label: "Service Charge", value: property.service_charge ? `${property.service_charge}%` : null },
-    { icon: DollarSign, label: "Annual Rent", value: property.annual_rent ? `AED ${property.annual_rent.toLocaleString()}` : null },
-    { icon: TrendingUp, label: "Estimated Yield", value: property.estimated_yield ? `${property.estimated_yield}%` : null },
-    { icon: Square, label: "Market Price PSF", value: property.market_price_psf ? `AED ${property.market_price_psf}` : null },
-    { icon: Square, label: "Rental Price PSF", value: property.rental_price_psf ? `AED ${property.rental_price_psf}` : null },
-  ].filter(item => item.value);
-
-  const nearbyByCategory = property.nearbyPoints.reduce((acc, point) => {
-    const category = point.nearby_categories?.name || "Other";
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(point);
-    return acc;
-  }, {});
-
-  const hasAmenities = property.property_amenities && property.property_amenities.length > 0;
-  const hasFeatures = property.property_features && property.property_features.length > 0;
-  const hasViews = property.property_views && property.property_views.length > 0;
-  const showTabs = hasAmenities || hasFeatures || hasViews;
 
   return (
     <div className="min-h-screen bg-background">
@@ -298,14 +369,14 @@ const PropertyDetail = ({ params }) => {
               {showTabs && (
                 <Card className="p-6">
                   <h2 className="font-serif text-2xl font-bold text-primary mb-4">Property Highlights</h2>
-                  <Tabs defaultValue={hasAmenities ? "amenities" : hasFeatures ? "features" : "views"} className="w-full">
+                  <Tabs defaultValue={defaultTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
-                      {hasAmenities && <TabsTrigger value="amenities">Amenities ({property.property_amenities.length})</TabsTrigger>}
-                      {hasFeatures && <TabsTrigger value="features">Features ({property.property_features.length})</TabsTrigger>}
-                      {hasViews && <TabsTrigger value="views">Views ({property.property_views.length})</TabsTrigger>}
+                      {tabFlags.hasAmenities && <TabsTrigger value="amenities">Amenities ({property.property_amenities.length})</TabsTrigger>}
+                      {tabFlags.hasFeatures && <TabsTrigger value="features">Features ({property.property_features.length})</TabsTrigger>}
+                      {tabFlags.hasViews && <TabsTrigger value="views">Views ({property.property_views.length})</TabsTrigger>}
                     </TabsList>
                     
-                    {hasAmenities && (
+                    {tabFlags.hasAmenities && (
                       <TabsContent value="amenities" className="mt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {property.property_amenities.map((amenity, i) => (
@@ -318,7 +389,7 @@ const PropertyDetail = ({ params }) => {
                       </TabsContent>
                     )}
                     
-                    {hasFeatures && (
+                    {tabFlags.hasFeatures && (
                       <TabsContent value="features" className="mt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {property.property_features.map((feature, i) => (
@@ -331,7 +402,7 @@ const PropertyDetail = ({ params }) => {
                       </TabsContent>
                     )}
                     
-                    {hasViews && (
+                    {tabFlags.hasViews && (
                       <TabsContent value="views" className="mt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {property.property_views.map((view, i) => (
@@ -348,7 +419,7 @@ const PropertyDetail = ({ params }) => {
               )}
 
               {/* Construction Updates */}
-              {property.constructionUpdates && property.constructionUpdates.length > 0 && (
+              {property.constructionUpdates?.length > 0 && (
                 <Card className="p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Hammer className="h-6 w-6 text-accent" />
@@ -379,7 +450,7 @@ const PropertyDetail = ({ params }) => {
               )}
 
               {/* Floor Plans */}
-              {property.floorPlans && property.floorPlans.length > 0 && (
+              {property.floorPlans?.length > 0 && (
                 <Card className="p-6">
                   <h2 className="font-serif text-2xl font-bold text-primary mb-4">Floor Plans</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -405,7 +476,7 @@ const PropertyDetail = ({ params }) => {
               )}
 
               {/* Nearby Points */}
-              {property.nearbyPoints.length > 0 && (
+              {Object.keys(nearbyByCategory).length > 0 && (
                 <Card className="p-6">
                   <h2 className="font-serif text-2xl font-bold text-primary mb-4">Nearby Locations</h2>
                   <div className="space-y-4">
@@ -440,7 +511,7 @@ const PropertyDetail = ({ params }) => {
               )}
 
               {/* Documents */}
-              {property.documents.length > 0 && (
+              {property.documents?.length > 0 && (
                 <Card className="p-6">
                   <h2 className="font-serif text-2xl font-bold text-primary mb-4">Documents & Brochures</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -476,7 +547,7 @@ const PropertyDetail = ({ params }) => {
 
             {/* Contact Form Sidebar */}
             <div className="space-y-6 sticky top-24">
-              <Card className="p-6 ">
+              <Card className="p-6">
                 <h3 className="font-serif text-xl font-bold text-primary mb-2">Interested in this property?</h3>
                 <p className="text-sm text-muted-foreground mb-6">Fill out the form and we'll get back to you shortly.</p>
                 <div className="space-y-4">
@@ -539,7 +610,7 @@ const PropertyDetail = ({ params }) => {
               </Card>
 
               {/* Developer Info Card - Desktop */}
-              <Card className="p-6  hidden lg:block">
+              <Card className="p-6 hidden lg:block">
                 <h3 className="font-semibold text-lg mb-3">Developer</h3>
                 {property.developerLogo && (
                   <img src={property.developerLogo} alt={property.developer} className="h-12 mb-3" />
@@ -549,6 +620,33 @@ const PropertyDetail = ({ params }) => {
             </div>
           </div>
         </div>
+
+        {/* Similar Properties Section */}
+        {similarProperties.length > 0 && (
+          <section className="bg-muted/30 py-16 border-t border-border">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-10">
+                <h2 className="font-serif text-3xl md:text-4xl font-bold text-primary mb-3">
+                  Similar Properties
+                </h2>
+                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                  Explore other properties that match your interests
+                </p>
+              </div>
+              <AnimatedPropertyGrid properties={similarProperties} viewMode="grid" />
+              <div className="text-center mt-8">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => window.location.href = '/properties'}
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  View All Properties
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
