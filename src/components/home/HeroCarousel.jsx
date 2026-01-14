@@ -61,7 +61,7 @@ export default function HeroCarousel({ featuredProperties = [] }) {
   const slide = slides[currentSlide];
 
   return (
-   <section className="relative h-screen w-full overflow-x-hidden overflow-y-hidden">
+   <section className="relative h-screen w-full overflow-hidden  overflow-x-hidden overflow-y-hidden">
   {/* Left Fixed Content */}
   <div className="absolute gap-10 top-0 left-0 z-10 h-full flex flex-col justify-center px-10 lg:px-22 pointer-events-none">
     <h1 className="text-5xl lg:text-7xl max-w-4xl font-bold text-white mb-4">
@@ -96,7 +96,7 @@ export default function HeroCarousel({ featuredProperties = [] }) {
       <img
         src={slide.image}
         alt={slide.title}
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-[90vh] object-cover"
       />
       <div className="absolute inset-0 bg-black/30" />
 
