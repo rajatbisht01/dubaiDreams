@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 
 export function UpdatePasswordForm({ className, ...props }) {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<String | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
