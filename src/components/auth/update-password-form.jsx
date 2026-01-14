@@ -14,16 +14,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 export function UpdatePasswordForm({ className, ...props }) {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<String | null>(null);
+const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const supabase = createClient();
+const supabase = useMemo(() => createClient(), []);
 
   /* 🔑 VERY IMPORTANT PART */
   useEffect(() => {
