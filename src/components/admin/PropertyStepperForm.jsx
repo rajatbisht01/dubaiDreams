@@ -750,6 +750,42 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                   <input className="col-span-2 border p-1" value={np.name} onChange={(e) => updateNearbyPoint(idx, "name", e.target.value)} placeholder="Name" />
                   <input className="p-1 border" value={np.distance_in_km} onChange={(e) => updateNearbyPoint(idx, "distance_in_km", e.target.value)} placeholder="km" />
                   <input className="p-1 border" value={np.distance_in_minutes} onChange={(e) => updateNearbyPoint(idx, "distance_in_minutes", e.target.value)} placeholder="mins" />
+                  <div className="col-span-6 grid grid-cols-2 gap-4">
+  <div>
+    <Label>Latitude</Label>
+    <Input
+      type="number"
+      step="any"
+      value={np.lat ?? ""}
+      onChange={(e) =>
+        updateNearbyPoint(
+          idx,
+          "lat",
+          e.target.value === "" ? null : Number(e.target.value)
+        )
+      }
+      placeholder="e.g., 25.2048"
+    />
+  </div>
+
+  <div>
+    <Label>Longitude</Label>
+    <Input
+      type="number"
+      step="any"
+      value={np.long ?? ""}
+      onChange={(e) =>
+        updateNearbyPoint(
+          idx,
+          "long",
+          e.target.value === "" ? null : Number(e.target.value)
+        )
+      }
+      placeholder="e.g., 55.2708"
+    />
+  </div>
+</div>
+     
                   <button className="col-span-6 mt-1 text-sm text-red-600" onClick={() => removeNearbyPoint(idx)}>Remove</button>
                 </div>
               ))}

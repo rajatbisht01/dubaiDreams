@@ -47,7 +47,7 @@ import {
 const MapView = dynamic(() => import("@/components/property/MapView"), {
   ssr: false,
   loading: () => (
-    <div className="h-[600px] flex items-center justify-center">
+    <div className="h-150 flex items-center justify-center">
       Loading map...
     </div>
   ),
@@ -302,7 +302,7 @@ const PropertiesPage = () => {
     <div className="min-h-screen bg-background">
       <main>
         {/* Filters Section */}
-        <section className="pb-8 px-4 md:px-20 bg-secondary/30">
+        <section className="pb-8 px-4  md:px-20 bg-secondary/30">
           <div className="container mx-auto px-4">
             {/* Page Title */}
             <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center pt-6">
@@ -328,7 +328,7 @@ const PropertiesPage = () => {
                   <SelectTrigger className="w-full md:w-48 h-12">
                     <SelectValue placeholder="Property Type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent >
                     <SelectItem value="all">All Types</SelectItem>
                     {propertyTypes?.map((item) => (
                       <SelectItem key={item.id} value={item.id}>

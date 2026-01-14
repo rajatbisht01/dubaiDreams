@@ -42,14 +42,23 @@ export async function GET(request) {
 
     /* ---------------------- Select Graph ---------------------- */
     const selectQuery = `
-      id, title, slug, description, starting_price, created_at, isFeatured,
+      id, title, slug, description, starting_price, created_at, latitude, longitude, isFeatured,
       bedrooms, bathrooms, size_range, price_range, handover, roi,
       developers:developer_id(id, name, logo_url),
       communities:community_id(id, name),
       property_types:property_type_id(id, name),
       property_status_types:status_id(id, name),
       property_images!inner(id, image_url, is_featured, sort_order),
-      property_amenities!left(amenity_id)
+      property_amenities!left(amenity_id),
+      nearby_points:property_nearby_points(
+    id,
+    name,
+    lat,
+    long,
+    distance_in_km,
+    distance_in_minutes,
+    nearby_categories:category_id(id, name)
+  )
     `;
 
     /* ---------------------- Base Query ---------------------- */

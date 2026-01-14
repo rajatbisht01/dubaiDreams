@@ -36,7 +36,7 @@ export async function GET(req, { params }) {
           distance_in_km, 
           distance_in_minutes, 
           lat, 
-          lang
+          long
         ),
         construction_updates(
           id, 
@@ -231,7 +231,7 @@ export async function PUT(req, { params }) {
               distance_in_km: np.distance_in_km || null,
               distance_in_minutes: np.distance_in_minutes || null,
               lat: np.lat || null,
-              lang: np.lang || null
+              long: np.long || null
             }))
           );
         

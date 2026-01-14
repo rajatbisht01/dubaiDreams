@@ -186,7 +186,7 @@ export async function POST(req) {
           distance_in_km: np.distance_in_km || null,
           distance_in_minutes: np.distance_in_minutes || null,
           lat: np.lat || null,
-          lang: np.lang || null
+          long: np.long || null
         })));
 
       if (nearbyErr) {
