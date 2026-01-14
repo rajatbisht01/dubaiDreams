@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePropertyStore } from "@/store/propertyStore";
+import { motion } from "framer-motion";
+
 
 const Hero = () => {
   const router = useRouter();
@@ -57,7 +59,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative my-8 flex items-center bg-transparent">
+    <section className="relative my-16 flex items-center bg-transparent">
       {/* Optional Background Image - Uncomment if needed */}
       {/* <div className="absolute inset-0 opacity-80">
         <Image
@@ -70,7 +72,7 @@ const Hero = () => {
       </div> */}
 
       <div className="relative container mx-auto px-4 py-2">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {/* Hero Text */}
           <div className="text-center mb-8 animate-in fade-in duration-700">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-black">
@@ -82,7 +84,20 @@ const Hero = () => {
           </div>
 
           {/* Search Card */}
-          <div className="bg-white rounded-2xl  p-4 shadow-2xl border animate-in fade-in duration-700 delay-100">
+          <motion.div
+      // key={item.title}
+      className="gradient-border shadow-2xl"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{
+        scale: 1.05,
+        transition: { duration: 0.2 },
+        transitionBehavior: "startToEnd",
+      }}
+      transition={{ duration: 0.5, delay: 0.15 }}
+    >
+          <div className="bg-white rounded-2xl  p-8  border hover:shadow-2xl hover:border-none animate-in fade-in duration-700 delay-100">
             <div className="space-y-4">
               {/* Main Search Row */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
@@ -230,7 +245,7 @@ const Hero = () => {
               </div> */}
             </div>
           </div>
-
+</motion.div>
           {/* Stats Section */}
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 animate-in fade-in duration-700 delay-200">
             {[

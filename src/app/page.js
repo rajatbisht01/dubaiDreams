@@ -8,6 +8,7 @@ import AnimatedPropertyGrid from "@/components/AnimatedPropertyGrid";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Hero from "@/components/Hero";
+import { motion } from "framer-motion";
 
 export default function HomePage() {
   const { allProperties, carouselProperties, featuredProperties,fetchFeaturedProperties, fetchCarouselProperties, fetchProperties, loading } = usePropertyStore();
@@ -32,50 +33,54 @@ useEffect(() => {
 
   
      <section className="p-8 bg-muted/30">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <h2 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
-                Why Invest in Dubai?
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Dubai offers unparalleled opportunities for property investors worldwide
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="bg-white p-8 rounded-lg shadow-luxury hover:shadow-gold transition-all duration-300">
-                <div className="w-16 h-16 bg-gradient-gold rounded-full flex items-center justify-center mb-6">
-                  <Award className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">High ROI</h3>
-                <p className="text-muted-foreground">Average returns of 8-15% annually with strong capital appreciation.</p>
-              </div>
-              
-              <div className="bg-white p-8 rounded-lg shadow-luxury hover:shadow-gold transition-all duration-300">
-                <div className="w-16 h-16 bg-gradient-gold rounded-full flex items-center justify-center mb-6">
-                  <Shield className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Tax-Free Income</h3>
-                <p className="text-muted-foreground">No property tax, income tax, or capital gains tax on your investments.</p>
-              </div>
-              
-              <div className="bg-white p-8 rounded-lg shadow-luxury hover:shadow-gold transition-all duration-300">
-                <div className="w-16 h-16 bg-gradient-gold rounded-full flex items-center justify-center mb-6">
-                  <TrendingUp className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Flexible Payment</h3>
-                <p className="text-muted-foreground">Developer payment plans with 20-40% down and installments during construction.</p>
-              </div>
-              
-              <div className="bg-white p-8 rounded-lg shadow-luxury hover:shadow-gold transition-all duration-300">
-                <div className="w-16 h-16 bg-gradient-gold rounded-full flex items-center justify-center mb-6">
-                  <Users className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Golden Visa</h3>
-                <p className="text-muted-foreground">Qualify for UAE residency visa with property investments over AED 2M.</p>
-              </div>
-            </div>
-          </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+  {[
+    {
+      title: "High ROI",
+      desc: "Average returns of 8-15% annually with strong capital appreciation.",
+      icon: Award,
+    },
+    {
+      title: "Tax-Free Income",
+      desc: "No property tax, income tax, or capital gains tax on your investments.",
+      icon: Shield,
+    },
+    {
+      title: "Flexible Payment",
+      desc: "Developer payment plans with 20-40% down and installments during construction.",
+      icon: TrendingUp,
+    },
+    {
+      title: "Golden Visa",
+      desc: "Qualify for UAE residency visa with property investments over AED 2M.",
+      icon: Users,
+    },
+  ].map((item, index) => (
+    <motion.div
+      key={item.title}
+      className="gradient-border"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{
+        scale: 1.05,
+        transition: { duration: 0.2 },
+        transitionBehavior: "startToEnd",
+      }}
+      transition={{ duration: 0.5, delay: index * 0.15 }}
+    >
+      <div className="group bg-white p-8 rounded-2xl h-full shadow-2xl hover:border-none transition-all duration-300">
+        <div className="w-8 h-8  rounded-full flex items-center justify-center mb-6">
+          <item.icon className="h-8 w-8 text-primary" />
+        </div>
+
+        <h3 className="text-xl group-hover:text-primary font-bold mb-3">{item.title}</h3>
+        <p className="text-muted-foreground">{item.desc}</p>
+      </div>
+    </motion.div>
+  ))}
+</div>
+
         </section>
   <Hero />
     {/* 🏠 featured Properties */}
