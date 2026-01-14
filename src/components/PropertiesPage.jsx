@@ -47,9 +47,7 @@ import {
 const MapView = dynamic(() => import("@/components/property/MapView"), {
   ssr: false,
   loading: () => (
-    <div className="h-150 flex items-center justify-center">
-      Loading map...
-    </div>
+    <div className="h-150 flex items-center justify-center">Loading map...</div>
   ),
 });
 
@@ -328,7 +326,7 @@ const PropertiesPage = () => {
                   <SelectTrigger className="w-full md:w-48 h-12">
                     <SelectValue placeholder="Property Type" />
                   </SelectTrigger>
-                  <SelectContent >
+                  <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
                     {propertyTypes?.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
@@ -382,9 +380,11 @@ const PropertiesPage = () => {
                     </Button>
                   </DrawerTrigger>
 
-                  <DrawerContent className="max-h-screen w-[30vw] p-4">
+                  <DrawerContent className="max-h-screen z-[1000] w-[30vw] p-4">
                     <DrawerHeader>
-                      <DrawerTitle>Additional Filters</DrawerTitle>
+                      <DrawerTitle className="text-center text-primary text-2xl">
+                        Additional Filters
+                      </DrawerTitle>
                     </DrawerHeader>
 
                     <div className="p-4 space-y-6">
@@ -427,20 +427,23 @@ const PropertiesPage = () => {
 
                       {/* Price Range */}
                       <div>
-                        <Label className="mb-2 block">
+                        <Label className="mb-2 block ">
                           Price Range: AED {formatPrice(tempPriceRange[0])} -{" "}
                           {formatPrice(tempPriceRange[1])}
                         </Label>
-
-                        <Slider
-                          min={0}
-                          max={10000000}
-                          step={100000}
-                          value={tempPriceRange}
-                          onValueChange={setTempPriceRange}
-                          onValueCommit={setPriceRange}
-                        />
-
+                        <div
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onPointerMove={(e) => e.stopPropagation()}
+                        >
+                          <Slider
+                            min={0}
+                            max={10000000}
+                            step={100000}
+                            value={tempPriceRange}
+                            onValueChange={setTempPriceRange}
+                            onValueCommit={setPriceRange}
+                          />
+                        </div>
                         <div className="flex justify-between text-xs text-muted-foreground mt-1">
                           <span>0</span>
                           <span>10M+</span>
@@ -670,7 +673,7 @@ const PropertiesPage = () => {
         </section>
 
         {/* Property Grid */}
-        <section className="py-4 px-4 md:px-20">
+        <section className="py-4 px-4  md:px-28">
           <div className="container mx-auto px-4">
             {loading ? (
               <div className="text-center py-12">

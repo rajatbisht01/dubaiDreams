@@ -25,7 +25,7 @@ const buttonVariants = cva(
         cyberpunk: "bg-pink-600 text-yellow-300 uppercase tracking-widest shadow-lg",
         pill: "rounded-full bg-[hsl(var(--color-primary))] text-white px-6 py-2 shadow-md",
         ghost:
-          "bg-transparent border border-white text-white hover:bg-white/10",
+          "bg-transparent border border-brand text-black  hover:bg-primary/10",
         neumorphic:
           "bg-secondary-foreground text-gray-800 rounded-xl shadow-[6px_6px_12px_#c5c5c5,-6px_-6px_12px_#ffffff]",
         brand_gradient:
