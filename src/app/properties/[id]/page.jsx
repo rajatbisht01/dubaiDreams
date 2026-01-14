@@ -398,7 +398,7 @@ const PropertyDetail = ({ params }) => {
                       const Icon = detail.icon;
                       return (
                         <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
-                          <Icon className="h-4 w-4 text-accent flex-shrink-0" />
+                          <Icon className="h-4 w-4 text-accent shrink-0" />
                           <div>
                             <p className="text-xs text-muted-foreground">{detail.label}</p>
                             <p className="font-semibold text-sm">{detail.value}</p>
@@ -431,7 +431,7 @@ const PropertyDetail = ({ params }) => {
                         <div className="grid grid-cols-2 gap-2">
                           {property.property_amenities.map((amenity, i) => (
                             <div key={i} className="flex items-center gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
+                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
                               <span className="text-muted-foreground">{amenity.amenities?.name}</span>
                             </div>
                           ))}
@@ -444,7 +444,7 @@ const PropertyDetail = ({ params }) => {
                         <div className="grid grid-cols-2 gap-2">
                           {property.property_features.map((feature, i) => (
                             <div key={i} className="flex items-center gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
+                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
                               <span className="text-muted-foreground">{feature.features?.name}</span>
                             </div>
                           ))}
@@ -457,7 +457,7 @@ const PropertyDetail = ({ params }) => {
                         <div className="grid grid-cols-2 gap-2">
                           {property.property_views.map((view, i) => (
                             <div key={i} className="flex items-center gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
+                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
                               <span className="text-muted-foreground">{view.view_types?.name}</span>
                             </div>
                           ))}
