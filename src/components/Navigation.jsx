@@ -39,7 +39,7 @@ const Navigation = () => {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-           <img src="/assets/logo.png" alt="logo"  className="w-20 h-20 p-2"/>
+           <img src="/assets/logo.png" alt="logo"  className="w-24 h-24 p-2"/>
           </Link>
 
           {/* Desktop Navigation */}

@@ -36,6 +36,8 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     community_id: null,
     property_type_id: null,
     status_id: null,
+    latitude: "",
+    longitude: "",
     starting_price: "",
     price_range: "",
     bedrooms: "",
@@ -87,7 +89,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
   }
 
   function seedFromItem(it) {
-    console.log("Seeding form with item:", it); // Debug log
+    console.log("Seeding form with item:", it);
     
     setPayload((p) => ({
       ...p,
@@ -99,6 +101,8 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       community_id: it.community_id || null,
       property_type_id: it.property_type_id || null,
       status_id: it.status_id || null,
+      latitude: it.latitude || "",
+      longitude: it.longitude || "",
       starting_price: it.starting_price || "",
       price_range: it.price_range || "",
       bedrooms: it.bedrooms || "",
@@ -116,22 +120,18 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       meta_keywords: it.meta_keywords || "",
       og_image_url: it.og_image_url || "",
       
-      // Extract amenity IDs from property_amenities array
       amenities: Array.isArray(it.property_amenities) 
         ? it.property_amenities.map(a => a.amenity_id) 
         : [],
       
-      // Extract feature IDs from property_features array
       features: Array.isArray(it.property_features) 
         ? it.property_features.map(f => f.feature_id) 
         : [],
       
-      // Extract view type IDs from property_views array
       views: Array.isArray(it.property_views) 
         ? it.property_views.map(v => v.view_type_id) 
         : [],
       
-      // Nearby points
       nearby_points: Array.isArray(it.property_nearby_points) 
         ? it.property_nearby_points.map(np => ({
             id: np.id,
@@ -142,7 +142,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
           })) 
         : [],
       
-      // Construction updates
       construction_updates: Array.isArray(it.construction_updates) 
         ? it.construction_updates.map(cu => ({
             id: cu.id,
@@ -152,12 +151,10 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
           })) 
         : [],
       
-      // Existing media
       existingImages: Array.isArray(it.property_images) ? it.property_images : [],
       existingDocuments: Array.isArray(it.property_documents) ? it.property_documents : [],
       existingFloorPlans: Array.isArray(it.floor_plans) ? it.floor_plans : [],
       
-      // Reset file lists
       imageFiles: [],
       documentFiles: [],
       floorPlanFiles: [],
@@ -299,7 +296,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     const successMessage = isEdit ? "Property updated!" : "Property created!";
     
     try {
-      // Build property payload
       const propertyPayload = {
         title: payload.title,
         isFeatured: payload.isFeatured,
@@ -309,6 +305,8 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
         community_id: payload.community_id,
         property_type_id: payload.property_type_id,
         status_id: payload.status_id,
+        latitude: payload.latitude || null,
+        longitude: payload.longitude || null,
         starting_price: payload.starting_price || null,
         price_range: payload.price_range || null,
         bedrooms: payload.bedrooms || null,
@@ -333,6 +331,8 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       };
 
       console.log("[Form Submit] Payload:", {
+        latitude: propertyPayload.latitude,
+        longitude: propertyPayload.longitude,
         amenities: propertyPayload.amenities,
         features: propertyPayload.features,
         views: propertyPayload.views,
@@ -340,7 +340,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
         updates_count: propertyPayload.construction_updates?.length
       });
 
-      // Save property FIRST
       const url = isEdit ? `/api/admin/properties/${item.id}` : `/api/admin/properties`;
       const method = isEdit ? "PUT" : "POST";
 
@@ -360,23 +359,19 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
       if (!propertyId) throw new Error("No property ID returned");
 
-      // Close modal immediately
       toast.success(successMessage);
       onSuccess();
       onClose();
       setLoading(false);
 
-      // Continue uploads/deletions in background
       (async () => {
         try {
-          // Delete marked items
           await Promise.allSettled([
             deleteBatch(`/api/properties/${propertyId}/images`, payload.imagesToDelete),
             deleteBatch(`/api/properties/${propertyId}/documents`, payload.documentsToDelete),
             deleteBatch(`/api/properties/${propertyId}/floor-plans`, payload.floorPlansToDelete),
           ]);
 
-          // Upload new files in parallel
           const [imageUrls, documentData, floorPlanData] = await Promise.all([
             Promise.all((payload.imageFiles || []).map(f => uploadFile(f, "image"))),
             Promise.all((payload.documentFiles || []).map(async (d) => ({
@@ -391,7 +386,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             })))
           ]);
 
-          // Batch POST new items
           await Promise.allSettled([
             postBatch(
               `/api/properties/${propertyId}/images`,
@@ -494,6 +488,30 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                 </select>
               </div>
             </div>
+            
+             <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Latitude</Label>
+                <Input 
+                  type="number" 
+                  step="any"
+                  value={payload.latitude} 
+                  onChange={(e) => setField("latitude", e.target.value)} 
+                  placeholder="e.g., 25.2048" 
+                />
+              </div>
+
+              <div>
+                <Label>Longitude</Label>
+                <Input 
+                  type="number" 
+                  step="any"
+                  value={payload.longitude} 
+                  onChange={(e) => setField("longitude", e.target.value)} 
+                  placeholder="e.g., 55.2708" 
+                />
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -512,6 +530,8 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                 </select>
               </div>
             </div>
+
+           
           </div>
         </Step>
 
@@ -559,7 +579,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
         {/* Step 3: Images */}
         <Step>
           <div>
-            {/* Existing Images */}
             {isEdit && payload.existingImages.length > 0 && (
               <div className="mb-6">
                 <Label>Existing Images</Label>
@@ -580,7 +599,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
               </div>
             )}
 
-            {/* New Images */}
             <Label>Upload New Images</Label>
             <label className="block mt-2">
               <input type="file" accept="image/*" multiple onChange={handleImageFiles} />
@@ -605,7 +623,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
         {/* Step 4: Documents & Floor Plans */}
         <Step>
-          {/* Existing Documents */}
           {isEdit && payload.existingDocuments.length > 0 && (
             <div className="space-y-2 mb-6">
               <Label>Existing Documents</Label>
@@ -619,7 +636,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             </div>
           )}
 
-          {/* New Documents */}
           <div className="space-y-3 mb-8">
             <Label>Upload New Documents (Brochure, RERA, etc)</Label>
             <input type="file" multiple onChange={handleDocumentFiles} />
@@ -639,7 +655,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             ))}
           </div>
 
-          {/* Existing Floor Plans */}
           {isEdit && payload.existingFloorPlans.length > 0 && (
             <div className="space-y-2 mb-6">
               <Label>Existing Floor Plans</Label>
@@ -653,7 +668,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
             </div>
           )}
           
-          {/* New Floor Plans */}
           <div className="space-y-3">
             <Label>Upload New Floor Plans (PDF)</Label>
             <input type="file" accept="application/pdf" multiple onChange={handleFloorPlanFiles} />
@@ -704,6 +718,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
               </div>
             </div>
 
+           
             <div>
               <Label>Choose Views</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">

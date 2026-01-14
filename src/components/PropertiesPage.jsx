@@ -382,7 +382,7 @@ const PropertiesPage = () => {
                     </Button>
                   </DrawerTrigger>
 
-                  <DrawerContent className="max-h-[100vh] w-[30vw] p-4">
+                  <DrawerContent className="max-h-screen w-[30vw] p-4">
                     <DrawerHeader>
                       <DrawerTitle>Additional Filters</DrawerTitle>
                     </DrawerHeader>
@@ -656,13 +656,13 @@ const PropertiesPage = () => {
                     <List />
                   </Button>
 
-                  {/* <Button
+                  <Button
                     variant={viewMode === "map" ? "default" : "outline"}
                     size="icon"
                     onClick={() => setViewMode("map")}
                   >
                     <Map />
-                  </Button> */}
+                  </Button>
                 </div>
               </div>
             </div>

@@ -271,7 +271,7 @@ async function handleEdit(item) {
         {/* Drawer Dialog */}
         {drawerItem && (
           <Dialog open={!!drawerItem} onOpenChange={() => setDrawerItem(null)}>
-            <DialogContent className="max-w-6xl text-center p-2 max-h-[100vh] overflow-y-auto">
+            <DialogContent className="max-w-6xl text-center p-2 max-h-screen overflow-y-auto">
               <DialogHeader >
                 <DialogTitle className={'text-center'} >
                   {drawerItem.id ? "Edit Property" : "Create New Property"}
