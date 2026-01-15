@@ -33,7 +33,7 @@ const Navigation = () => {
   if (loading) return null; // optional UX optimization
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm transition-all">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-md border-b border-gray-200 shadow-sm transition-all">
       <div className="container w-screen mx-auto px-4">
         <div className="flex items-center px-6 justify-between h-20">
 
