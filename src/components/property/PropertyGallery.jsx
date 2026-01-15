@@ -12,7 +12,7 @@ export default function PropertyGallery({ propertyImages }) {
         <img
           src={activeImage?.url}
           alt={activeImage?.alt || "Property Image"}
-          className="max-w-full max-h-[80vh] object-contain transition-all duration-300"
+          className="max-w-full  rounded-2xl max-h-[80vh] object-contain transition-all duration-300"
         />
       </div>
 

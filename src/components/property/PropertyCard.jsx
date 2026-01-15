@@ -37,7 +37,7 @@ const PropertyCard = ({ property,viewMode='grid', }) => {
 
   return (
     <Link href={`/properties/${id}`}>
-      <Card className="group overflow-hidden w-[92%] hover:shadow-luxury transition-all duration-300 cursor-pointer flex flex-col h-full">
+      <Card className="group overflow-hidden w-full hover:shadow-luxury transition-all duration-300 cursor-pointer flex flex-col h-full">
         {/* Image / Carousel */}
         <div className={`relative overflow-hidden ${viewMode ==='grid'? 'aspect-[4/3] h-[180px]' : '' }  `}>
           {images.length > 1 ? (

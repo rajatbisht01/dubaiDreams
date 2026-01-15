@@ -35,11 +35,11 @@ const Navigation = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm transition-all">
       <div className="container w-screen mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center px-6 justify-between h-20">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-           <img src="/assets/logo.png" alt="logo"  className="w-24 h-24 p-2"/>
+           <img src="/assets/logo.png" alt="logo"  className="w-22 h-22"/>
           </Link>
 
           {/* Desktop Navigation */}

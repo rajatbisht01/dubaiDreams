@@ -309,6 +309,12 @@ const PropertyDetail = ({ params }) => {
               <ChevronRight className="h-4 w-4" />
               <span className="text-foreground truncate">{property.title}</span>
             </div>
+  {/* Image Gallery */}
+        <section className="bg-background py-6">
+          <Suspense fallback={<div className="aspect-video bg-muted animate-pulse " />}>
+            <PropertyGallery propertyImages={propertyImages} />
+          </Suspense>
+        </section>
 
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
               <div className="flex-1 min-w-0">
@@ -360,7 +366,7 @@ const PropertyDetail = ({ params }) => {
         </section>
 
         {/* Compact Stats Bar */}
-        <section className="bg-muted/30 py-3 border-b border-border">
+        <section className=" py-3 border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {keyStats.map((stat, index) => (
@@ -370,12 +376,7 @@ const PropertyDetail = ({ params }) => {
           </div>
         </section>
 
-        {/* Image Gallery */}
-        <section className="bg-background py-6">
-          <Suspense fallback={<div className="aspect-video bg-muted animate-pulse rounded-lg" />}>
-            <PropertyGallery propertyImages={propertyImages} />
-          </Suspense>
-        </section>
+      
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

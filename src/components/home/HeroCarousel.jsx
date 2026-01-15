@@ -98,7 +98,7 @@ export default function HeroCarousel({ featuredProperties = [] }) {
         alt={slide.title}
         className="absolute inset-0 w-full h-[90vh] object-cover"
       />
-      <div className="absolute inset-0 bg-black/30" />
+      <div className="absolute inset-0 " />
 
       {/* Bottom-right info */}
       <div className="absolute bottom-30 right-25 bg-black/70 p-6 rounded-xl max-w-sm text-white shadow-lg">

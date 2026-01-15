@@ -86,18 +86,9 @@ const Hero = () => {
           {/* Search Card */}
           <motion.div
       // key={item.title}
-      className="gradient-border shadow-2xl"
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      whileHover={{
-        scale: 1.05,
-        transition: { duration: 0.2 },
-        transitionBehavior: "startToEnd",
-      }}
-      transition={{ duration: 0.5, delay: 0.15 }}
+      className="flex gradient-border   w-full items-center justify-center"
     >
-          <div className="bg-white rounded-2xl  p-8  border hover:shadow-2xl hover:border-none animate-in fade-in duration-700 delay-100">
+          <div className="bg-white rounded-2xl w-full  p-8 hover:scale-101 shadow-2xl hover:border-none animate-in fade-in duration-700 delay-100">
             <div className="space-y-4">
               {/* Main Search Row */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
