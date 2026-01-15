@@ -31,7 +31,10 @@ export async function GET(req, { params }) {
         community_id,
         developer_id,
         status_id,
-        
+         property_documents(
+        id, title, file_url, sort_order,
+        document_types:document_type_id(name)
+      ),
         developers:developer_id ( id, name, logo_url ),
         communities:community_id ( id, name ),
         property_types:property_type_id ( id, name ),
@@ -58,6 +61,7 @@ export async function GET(req, { params }) {
           id,
           name,
           distance_in_km,
+          lat, long,
           distance_in_minutes,
           nearby_categories ( id, name )
         )
