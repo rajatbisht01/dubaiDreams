@@ -69,7 +69,7 @@ const About = () => {
       </section> */}
 
       {/* Values Section */}
-      <section className="py-12 px-6 sm:px-12 lg:px-24 bg-gradient-to-t from-white via-gray-50 to-white">
+      <section className="py-12 px-6 sm:px-12 lg:px-24 bg-linear-to-t from-white via-gray-50 to-white">
         <div className="container mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -81,7 +81,7 @@ const About = () => {
             <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-4">
               Our Values
             </span>
-            <h2 className="text-4xl sm:text-5xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+            <h2 className="text-4xl sm:text-5xl font-extrabold mb-6 bg-clip-text text-transparent bg-linear-to-r from-primary to-secondary">
               What Sets Us Apart
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -99,7 +99,7 @@ const About = () => {
                 transition={{ delay: index * 0.15, duration: 0.6 }}
                 className="bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300"
               >
-                <div className={`flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br ${value.gradient} mb-6 shadow-lg`}>
+                <div className={`flex items-center justify-center w-20 h-20 rounded-3xl bg-linear-to-br ${value.gradient} mb-6 shadow-lg`}>
                   <value.icon className="w-10 h-10 text-black" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{value.title}</h3>
@@ -111,7 +111,7 @@ const About = () => {
       </section>
 
       {/* Office Hours Section */}
-      <section className="py-20 px-6 sm:px-12 lg:px-24 bg-gradient-to-r from-primary/5 to-secondary/5">
+      <section className="py-20 px-6 sm:px-12 lg:px-24 bg-linear-to-r from-primary/5 to-secondary/5">
         <div className="container mx-auto max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

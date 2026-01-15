@@ -75,7 +75,7 @@ const Hero = () => {
         <div className="max-w-5xl mx-auto">
           {/* Hero Text */}
           <div className="text-center mb-8 animate-in fade-in duration-700">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-black">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-black">
               Find Your Dream Property in Dubai
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">

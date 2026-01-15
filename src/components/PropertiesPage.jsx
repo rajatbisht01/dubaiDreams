@@ -380,7 +380,7 @@ const PropertiesPage = () => {
                     </Button>
                   </DrawerTrigger>
 
-                  <DrawerContent className="max-h-screen z-[1000] w-[30vw] p-4">
+                  <DrawerContent className="max-h-screen z-1000 w-[30vw] p-4">
                     <DrawerHeader>
                       <DrawerTitle className="text-center text-primary text-2xl">
                         Additional Filters

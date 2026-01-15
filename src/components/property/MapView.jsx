@@ -372,11 +372,11 @@ const MapView = ({ properties = [] }) => {
       </MapContainer>
 
       {/* Top Controls Bar */}
-      <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-4 z-[1000] pointer-events-none">
+      <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-4 z-1000 pointer-events-none">
         {/* Stats Card */}
         <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg px-4 py-3 pointer-events-auto border border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg">
+            <div className="p-2 bg-linear-to-br from-primary/10 to-accent/10 rounded-lg">
               <Building2 className="h-5 w-5 text-primary" />
             </div>
             <div>
@@ -404,7 +404,7 @@ const MapView = ({ properties = [] }) => {
 
       {/* Category Filters - Always visible when nearby points exist */}
       {uniqueCategories.length > 0 && (
-        <div className={`absolute top-20 left-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-3 z-[1000] max-w-[220px] border border-border transition-opacity ${!showNearbyPoints ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className={`absolute top-20 left-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-3 z-1000 max-w-55 border border-border transition-opacity ${!showNearbyPoints ? 'opacity-50 pointer-events-none' : ''}`}>
           <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
             <MapPin className="h-3 w-3" />
             Filter by Category
@@ -439,7 +439,7 @@ const MapView = ({ properties = [] }) => {
                   }`}
                 >
                   <div 
-                    className="w-3 h-3 rounded-full flex-shrink-0 ring-2 ring-white shadow-sm" 
+                    className="w-3 h-3 rounded-full shrink-0 ring-2 ring-white shadow-sm" 
                     style={{ backgroundColor: config.color }}
                   />
                   <span className="text-xs font-medium flex-1">{config.label}</span>
@@ -461,14 +461,14 @@ const MapView = ({ properties = [] }) => {
 
       {/* Hovering Property Card - Compact */}
       {hoveredProperty && !selectedProperty && (
-        <div className="absolute bottom-4 left-4 bg-white rounded-xl shadow-2xl overflow-hidden z-[1000] w-[300px] border-2 border-primary/20 animate-in slide-in-from-bottom-2">
+        <div className="absolute bottom-4 left-4 bg-white rounded-xl shadow-2xl overflow-hidden z-1000 w-75 border-2 border-primary/20 animate-in slide-in-from-bottom-2">
           <div className="relative h-36">
             <img
               src={getFeaturedImage(hoveredProperty)}
               alt={hoveredProperty.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
             {hoveredProperty.isFeatured && (
               <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2.5 py-1 rounded-full font-bold shadow-lg">
                 ⭐ Featured
@@ -519,7 +519,7 @@ const MapView = ({ properties = [] }) => {
 
       {/* Selected Property Card - Premium Expanded */}
       {selectedProperty && (
-        <div className="absolute bottom-4 left-4 right-4 md:left-4 md:right-auto md:w-[380px] bg-white rounded-2xl shadow-2xl overflow-hidden z-[1000] border-2 border-primary/30 animate-in slide-in-from-bottom-4">
+        <div className="absolute bottom-4 left-4 right-4 md:left-4 md:right-auto md:w-95 bg-white rounded-2xl shadow-2xl overflow-hidden z-1000 border-2 border-primary/30 animate-in slide-in-from-bottom-4">
           <button
             onClick={() => setSelectedProperty(null)}
             className="absolute top-3 right-3 z-10 bg-white/95 hover:bg-white rounded-full p-2 transition-all shadow-lg hover:shadow-xl"
@@ -533,7 +533,7 @@ const MapView = ({ properties = [] }) => {
               alt={selectedProperty.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
             
             <div className="absolute top-3 left-3 flex gap-2">
               {selectedProperty.isFeatured && (
@@ -562,28 +562,28 @@ const MapView = ({ properties = [] }) => {
             <h3 className="font-bold text-lg line-clamp-2 mb-2 leading-tight">{selectedProperty.title}</h3>
             
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
-              <MapPin className="h-4 w-4 flex-shrink-0 text-primary" />
+              <MapPin className="h-4 w-4 shrink-0 text-primary" />
               <span className="line-clamp-1 font-medium">{selectedProperty.communities?.name || "Dubai"}</span>
             </div>
 
             {/* Property Stats Grid */}
             <div className="grid grid-cols-3 gap-2 mb-4 pb-4 border-b">
               {selectedProperty.bedrooms && (
-                <div className="text-center p-2 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg">
+                <div className="text-center p-2 bg-linear-to-br from-blue-50 to-blue-100/50 rounded-lg">
                   <Bed className="h-4 w-4 mx-auto mb-1 text-blue-600" />
                   <p className="text-xs text-muted-foreground">Beds</p>
                   <p className="font-bold text-sm">{selectedProperty.bedrooms}</p>
                 </div>
               )}
               {selectedProperty.bathrooms && (
-                <div className="text-center p-2 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-lg">
+                <div className="text-center p-2 bg-linear-to-br from-purple-50 to-purple-100/50 rounded-lg">
                   <Bath className="h-4 w-4 mx-auto mb-1 text-purple-600" />
                   <p className="text-xs text-muted-foreground">Baths</p>
                   <p className="font-bold text-sm">{selectedProperty.bathrooms}</p>
                 </div>
               )}
               {selectedProperty.size_range && (
-                <div className="text-center p-2 bg-gradient-to-br from-green-50 to-green-100/50 rounded-lg">
+                <div className="text-center p-2 bg-linear-to-br from-green-50 to-green-100/50 rounded-lg">
                   <Maximize className="h-4 w-4 mx-auto mb-1 text-green-600" />
                   <p className="text-xs text-muted-foreground">Size</p>
                   <p className="font-bold text-xs leading-tight">{selectedProperty.size_range}</p>
@@ -610,7 +610,7 @@ const MapView = ({ properties = [] }) => {
             </div>
 
             <Link href={`/properties/${selectedProperty.id}`}>
-              <button className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground py-3 rounded-xl transition-all flex items-center justify-center gap-2 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+              <button className="w-full bg-linear-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground py-3 rounded-xl transition-all flex items-center justify-center gap-2 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                 <Home className="h-4 w-4" />
                 View Full Details
                 <ChevronRight className="h-4 w-4" />
@@ -621,7 +621,7 @@ const MapView = ({ properties = [] }) => {
       )}
 
       {/* Custom Zoom Controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-[1000]">
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-1000">
         <button
           onClick={() => mapRef.current?.setZoom(mapRef.current.getZoom() + 1)}
           className="bg-white hover:bg-muted w-11 h-11 rounded-xl shadow-lg flex items-center justify-center font-bold text-xl transition-all border border-border hover:border-primary hover:shadow-xl"
