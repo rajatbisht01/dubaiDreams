@@ -26,13 +26,14 @@ import LookupManager from "@/components/admin/LookupManager";
 import UserManager from "@/components/admin/UserManager";
 import { useUser } from "@/hooks/useUser";
 import MessageTable from "@/components/admin/MessageTable";
+import { toast } from "sonner";
 
 const AdminPage = () => {
   const [activeTab, setActiveTab] = useState("properties");
   const { profile, loading } = useUser();
 
   const [properties, setProperties] = useState([]);
-  const [drawerItem, setDrawerItem] = useState(null);
+  const [drawerItem, setDrawerItem] = useState(undefined); // undefined = closed, null = create, object = edit
   const [deleteId, setDeleteId] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -94,22 +95,21 @@ const AdminPage = () => {
     }
   };
 
-  
-// Example: In your properties list/table component
-async function handleEdit(item) {
-  const propertyId = item.id;
-  try {
-    // Fetch complete property data with all relations
-    const res = await fetch(`/api/admin/properties/${propertyId}`);
-    const propertyData = await res.json();
-    
-    // Open the form with complete data
-    setDrawerItem(propertyData);
-  } catch (err) {
-    console.error("Failed to fetch property", err);
-    toast.error("Failed to load property data");
+  async function handleEdit(item) {
+    const propertyId = item.id;
+    try {
+      // Fetch complete property data with all relations
+      const res = await fetch(`/api/admin/properties/${propertyId}`);
+      const propertyData = await res.json();
+      
+      // Open the form with complete data
+      setDrawerItem(propertyData);
+    } catch (err) {
+      console.error("Failed to fetch property", err);
+      toast.error("Failed to load property data");
+    }
   }
-}
+
   return (
     <div className="min-h-screen bg-background md:px-4">
       <div className="container mx-auto px-3 sm:px-4 py-8">
@@ -217,7 +217,7 @@ async function handleEdit(item) {
                 <h2 className="text-2xl font-bold">Properties Management</h2>
                 <p className="text-muted-foreground">Add, edit, or remove properties</p>
               </div>
-              <Button onClick={() => setDrawerItem({})} className="w-full bg-brand sm:w-auto">
+              <Button onClick={() => setDrawerItem(null)} className="w-full bg-brand sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" /> Add Property
               </Button>
             </div>
@@ -269,12 +269,12 @@ async function handleEdit(item) {
         </Tabs>
 
         {/* Drawer Dialog */}
-        {drawerItem && (
-          <Dialog open={!!drawerItem} onOpenChange={() => setDrawerItem(null)}>
-            <DialogContent className="max-w-6xl text-center p-2 max-h-screen overflow-y-auto">
+        {drawerItem !== undefined && (
+          <Dialog open={drawerItem !== undefined} onOpenChange={() => setDrawerItem(undefined)}>
+            <DialogContent className="max-w-xl text-center p-4 bg-accent-foreground max-h-screen overflow-y-auto">
               <DialogHeader >
-                <DialogTitle className={'text-center'} >
-                  {drawerItem.id ? "Edit Property" : "Create New Property"}
+                <DialogTitle className={'text-center font-bold text-primary'} >
+                  {drawerItem?.id ? "Edit Property" : "Create New Property"}
                 </DialogTitle>
                 <DialogDescription className="text-center">
                   Fill in all steps to save the property
@@ -283,7 +283,7 @@ async function handleEdit(item) {
 
               <PropertyStepperForm
                 item={drawerItem}
-                onClose={() => setDrawerItem(null)}
+                onClose={() => setDrawerItem(undefined)}
                 onSuccess={() => {
                   fetchProperties();
                   fetchStats();

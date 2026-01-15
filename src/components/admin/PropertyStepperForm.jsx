@@ -7,12 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+const STORAGE_KEY = "property_form_draft";
 
 export default function PropertyStepperForm({ item = null, onClose = () => {}, onSuccess = () => {} }) {
   const isEdit = !!item?.id;
   const [loading, setLoading] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
 
   const [lookups, setLookups] = useState({
     propertyTypes: [],
@@ -70,12 +74,62 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     floorPlansToDelete: [],
   });
 
+  // Load draft on mount for create mode
   useEffect(() => {
     fetchLookups();
-    if (item) {
+    
+    if (item?.id) {
+      // Edit mode - load the item
       seedFromItem(item);
+    } else {
+      // Create mode - check for draft
+      loadDraft();
     }
-  }, [item]);
+  }, []);
+
+  // Auto-save draft when payload changes (only in create mode)
+  useEffect(() => {
+    if (!isEdit && payload.title) {
+      saveDraft();
+    }
+  }, [payload, isEdit]);
+
+  function loadDraft() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const draft = JSON.parse(stored);
+        setPayload(draft);
+        setHasDraft(true);
+      }
+    } catch (error) {
+      console.log("No draft found or error loading draft");
+    }
+  }
+
+  function saveDraft() {
+    try {
+      // Only save serializable data (exclude File objects)
+      const draftData = {
+        ...payload,
+        imageFiles: [], // Files can't be serialized
+        documentFiles: [],
+        floorPlanFiles: [],
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draftData));
+    } catch (error) {
+      console.error("Error saving draft:", error);
+    }
+  }
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      setHasDraft(false);
+    } catch (error) {
+      console.error("Error clearing draft:", error);
+    }
+  }
 
   async function fetchLookups() {
     try {
@@ -359,6 +413,11 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
       if (!propertyId) throw new Error("No property ID returned");
 
+      // Clear draft on successful creation
+      if (!isEdit) {
+        clearDraft();
+      }
+
       toast.success(successMessage);
       onSuccess();
       onClose();
@@ -447,6 +506,24 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
   return (
     <div className="">
+      {!isEdit && hasDraft && (
+        <Alert className="border-0 p-0">
+          <AlertDescription>
+            Your progress has been saved. Continue where you left off or{" "}
+            <button
+              onClick={() => {
+                clearDraft();
+                window.location.reload();
+              }}
+              className="underline font-semibold"
+            >
+              start fresh
+            </button>
+            .
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Stepper
         initialStep={1}
         stepCircleContainerClassName="bg-black/70"
@@ -530,8 +607,6 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                 </select>
               </div>
             </div>
-
-           
           </div>
         </Step>
 
@@ -690,7 +765,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
           <div className="space-y-4">
             <div>
               <Label>Choose Amenities</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
                 {lookups.amenities.map((a) => (
                   <label key={a.id} className="flex items-center gap-2">
                     <Checkbox
@@ -705,7 +780,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
             <div>
               <Label>Choose Features</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
                 {lookups.features.map((f) => (
                   <label key={f.id} className="flex items-center gap-2">
                     <Checkbox
@@ -721,7 +796,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
            
             <div>
               <Label>Choose Views</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
                 {lookups.viewTypes.map((v) => (
                   <label key={v.id} className="flex items-center gap-2">
                     <Checkbox
@@ -751,40 +826,40 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                   <input className="p-1 border" value={np.distance_in_km} onChange={(e) => updateNearbyPoint(idx, "distance_in_km", e.target.value)} placeholder="km" />
                   <input className="p-1 border" value={np.distance_in_minutes} onChange={(e) => updateNearbyPoint(idx, "distance_in_minutes", e.target.value)} placeholder="mins" />
                   <div className="col-span-6 grid grid-cols-2 gap-4">
-  <div>
-    <Label>Latitude</Label>
-    <Input
-      type="number"
-      step="any"
-      value={np.lat ?? ""}
-      onChange={(e) =>
-        updateNearbyPoint(
-          idx,
-          "lat",
-          e.target.value === "" ? null : Number(e.target.value)
-        )
-      }
-      placeholder="e.g., 25.2048"
-    />
-  </div>
+                    <div>
+                      <Label>Latitude</Label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={np.lat ?? ""}
+                        onChange={(e) =>
+                          updateNearbyPoint(
+                            idx,
+                            "lat",
+                            e.target.value === "" ? null : Number(e.target.value)
+                          )
+                        }
+                        placeholder="e.g., 25.2048"
+                      />
+                    </div>
 
-  <div>
-    <Label>Longitude</Label>
-    <Input
-      type="number"
-      step="any"
-      value={np.long ?? ""}
-      onChange={(e) =>
-        updateNearbyPoint(
-          idx,
-          "long",
-          e.target.value === "" ? null : Number(e.target.value)
-        )
-      }
-      placeholder="e.g., 55.2708"
-    />
-  </div>
-</div>
+                    <div>
+                      <Label>Longitude</Label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={np.long ?? ""}
+                        onChange={(e) =>
+                          updateNearbyPoint(
+                            idx,
+                            "long",
+                            e.target.value === "" ? null : Number(e.target.value)
+                          )
+                        }
+                        placeholder="e.g., 55.2708"
+                      />
+                    </div>
+                  </div>
      
                   <button className="col-span-6 mt-1 text-sm text-red-600" onClick={() => removeNearbyPoint(idx)}>Remove</button>
                 </div>
