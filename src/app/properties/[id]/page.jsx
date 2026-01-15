@@ -411,6 +411,90 @@ const PropertyDetail = ({ params }) => {
                 </InfoSection>
               )}
 
+{/* Construction Updates */}
+              {property.constructionUpdates?.length > 0 && (
+                <Card className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Hammer className="h-6 w-6 text-accent" />
+                    <h2 className="font-serif text-2xl font-bold text-primary">Construction Progress</h2>
+                  </div>
+                  <div className="space-y-4">
+                    {property.constructionUpdates.map((update) => (
+                      <div key={update.id} className="border-l-4 border-accent pl-4 py-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-muted-foreground">
+                            {update.update_date ? new Date(update.update_date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            }) : 'Date not specified'}
+                          </span>
+                          {update.progress_percent !== null && (
+                            <span className="text-sm font-semibold text-accent">
+                              {update.progress_percent}% Complete
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground">{update.update_text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+
+              {/* Floor Plans */}
+              {property.floorPlans?.length > 0 && (
+                <Card className="p-6">
+                  <h2 className="font-serif text-2xl font-bold text-primary mb-4">Floor Plans</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {property.floorPlans.map((plan) => (
+                      <a
+                        key={plan.id}
+                        href={plan.pdf_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="p-2 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors">
+                          <FileText className="h-5 w-5 text-accent" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground">{plan.size} sqft</p>
+                        </div>
+                        <Download className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
+                      </a>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+
+ {/* Documents */}
+              {property.documents?.length > 0 && (
+                <Card className="p-6">
+                  <h2 className="font-serif text-2xl font-bold text-primary mb-4">Documents & Brochures</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {property.documents.map((doc) => (
+                      <a
+                        key={doc.id}
+                        href={doc.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="p-2 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors">
+                          <Download className="h-5 w-5 text-accent" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground">{doc.document_types?.name || 'Document'}</p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
               {/* Highlights Tabs */}
               {hasHighlights && (
                 <InfoSection title="Property Highlights" icon={CheckCircle2}>
