@@ -673,7 +673,7 @@ const PropertiesPage = () => {
         </section>
 
         {/* Property Grid */}
-        <section className="py-4 px-4  md:px-28">
+        <section className="py-4 px-4  md:px-12">
           <div className="container mx-auto px-4">
             {loading ? (
               <div className="text-center py-12">

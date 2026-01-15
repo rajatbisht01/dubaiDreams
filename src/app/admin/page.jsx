@@ -3,20 +3,32 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  Plus, 
-  Building2, 
-  MapPin, 
-  Users, 
-  Tag, 
-  Sparkles, 
-  Eye, 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Plus,
+  Building2,
+  MapPin,
+  Users,
+  Tag,
+  Sparkles,
+  Eye,
   FileText,
   Home,
   Settings,
-  ShieldCheck
+  ShieldCheck,
 } from "lucide-react";
 
 import PropertyStepperForm from "@/components/admin/PropertyStepperForm";
@@ -41,7 +53,7 @@ const AdminPage = () => {
     totalProperties: 0,
     totalUsers: 0,
     totalDevelopers: 0,
-    totalCommunities: 0
+    totalCommunities: 0,
   });
 
   const fetchProperties = async () => {
@@ -50,7 +62,7 @@ const AdminPage = () => {
       const data = await res.json();
       if (!Array.isArray(data)) throw new Error("Invalid data");
       setProperties(data);
-      setStats(prev => ({ ...prev, totalProperties: data.length }));
+      setStats((prev) => ({ ...prev, totalProperties: data.length }));
     } catch (err) {
       console.error("[AdminPage] fetchProperties error:", err);
     }
@@ -101,7 +113,7 @@ const AdminPage = () => {
       // Fetch complete property data with all relations
       const res = await fetch(`/api/admin/properties/${propertyId}`);
       const propertyData = await res.json();
-      
+
       // Open the form with complete data
       setDrawerItem(propertyData);
     } catch (err) {
@@ -113,11 +125,14 @@ const AdminPage = () => {
   return (
     <div className="min-h-screen bg-background md:px-4">
       <div className="container mx-auto px-3 sm:px-4 py-8">
-
         {/* Header */}
-        <div className="mb-8 text-center sm:text-left">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Admin Dashboard</h1>
-          <h1 className="text-xl sm:text-2xl font-bold mb-2">Hi {profile?.full_name}</h1>
+        <div className="mb-8 text-left md:text-center ">
+          <h1 className="text-3xl sm:text-4xl text-primary font-bold mb-2">
+            Admin Dashboard
+          </h1>
+          <h1 className="text-xl sm:text-2xl font-bold mb-2">
+            Hi {profile?.full_name}
+          </h1>
 
           <p className="text-muted-foreground">
             Manage properties, lookups, and users
@@ -125,7 +140,7 @@ const AdminPage = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
@@ -175,49 +190,65 @@ const AdminPage = () => {
 
         {/* Tabs - now scrollable on mobile */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full  flex justify-center-safe :flex md:justify-between md:space-x-8  rounded-lg mb-4">
+          <TabsList className="w-full  flex justify-center-safe :flex md:justify-between space-x-4 md:space-x-8  rounded-lg mb-10">
             <TabsTrigger value="properties" className="gap-2">
-              <Home className="h-4 w-4" /> <span className="hidden sm:inline">Properties</span>
+              <Home className="h-4 w-4" />{" "}
+              <span className="hidden p-1 sm:inline">Properties</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="gap-2">
-              <FileText className="h-4 w-4" /> <span className="hidden sm:inline">Messages</span>
+              <FileText className="h-4 w-4" />{" "}
+              <span className="hidden p-1 sm:inline">Messages</span>
             </TabsTrigger>
             <TabsTrigger value="types" className="gap-2">
-              <Tag className="h-4 w-4" /> <span className="hidden sm:inline">Types</span>
+              <Tag className="h-4 w-4" />{" "}
+              <span className="hidden p-1 sm:inline">Types</span>
             </TabsTrigger>
             <TabsTrigger value="status" className="gap-2">
-              <Sparkles className="h-4 w-4" /> <span className="hidden sm:inline">Status</span>
+              <Sparkles className="h-4 w-4" />{" "}
+              <span className="hidden p-1 sm:inline">Status</span>
             </TabsTrigger>
             <TabsTrigger value="communities" className="gap-2">
-              <MapPin className="h-4 w-4" /> <span className="hidden sm:inline">Communities</span>
+              <MapPin className="h-4 w-4" />{" "}
+              <span className="hidden p-1 sm:inline">Communities</span>
             </TabsTrigger>
             <TabsTrigger value="developers" className="gap-2">
-              <Building2 className="h-4 w-4" /> <span className="hidden sm:inline">Developers</span>
+              <Building2 className="h-4 w-4" />{" "}
+              <span className="hidden p-1 sm:inline">Developers</span>
             </TabsTrigger>
             <TabsTrigger value="amenities" className="gap-2">
-              <Settings className="h-4 w-4" /> <span className="hidden sm:inline">Amenities</span>
+              <Settings className="h-4 w-4" />{" "}
+              <span className="hidden p-1 sm:inline">Amenities</span>
             </TabsTrigger>
             <TabsTrigger value="features" className="gap-2">
-              <Sparkles className="h-4 w-4" /> <span className="hidden sm:inline">Features</span>
+              <Sparkles className="h-4 w-4" />{" "}
+              <span className="hidden p-1 sm:inline">Features</span>
             </TabsTrigger>
             <TabsTrigger value="views" className="gap-2">
-              <Eye className="h-4 w-4" /> <span className="hidden sm:inline">Views</span>
+              <Eye className="h-4 w-4" />{" "}
+              <span className="hidden p-1 sm:inline">Views</span>
             </TabsTrigger>
             {profile?.role === "superAdmin" && (
-            <TabsTrigger value="users" className="gap-2">
-              <ShieldCheck className="h-4 w-4" /> <span className="hidden sm:inline">Users</span>
-            </TabsTrigger>
-             )}
+              <TabsTrigger value="users" className="gap-2">
+                <ShieldCheck className="h-4 w-4" />{" "}
+                <span className="hidden p-1 sm:inline">Users</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Properties */}
-          <TabsContent value="properties" className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <div className="text-center sm:text-left">
-                <h2 className="text-2xl font-bold">Properties Management</h2>
-                <p className="text-muted-foreground">Add, edit, or remove properties</p>
+          <TabsContent value="properties" className="space-y-8">
+            <div className="flex flex-col  sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div className="w-full text-center sm:w-auto sm:text-left">
+                <h2 className="text-3xl text-primary font-bold">Properties Management</h2>
+                <p className="text-muted-foreground">
+                  Add, edit, or remove properties
+                </p>
               </div>
-              <Button onClick={() => setDrawerItem(null)} className="w-full bg-brand sm:w-auto">
+
+              <Button
+                onClick={() => setDrawerItem(null)}
+                className="w-full sm:w-auto bg-brand"
+              >
                 <Plus className="mr-2 h-4 w-4" /> Add Property
               </Button>
             </div>
@@ -236,31 +267,74 @@ const AdminPage = () => {
 
           {/* Lookup Tabs (unchanged) */}
           <TabsContent value="types">
-            <LookupManager title="Property Types" description="Manage property types" endpoint="property-types" icon={<Tag className="h-5 w-5" />} onUpdate={fetchStats} />
+            <LookupManager
+              title="Property Types"
+              description="Manage property types"
+              endpoint="property-types"
+              icon={<Tag className="h-5 w-5" />}
+              onUpdate={fetchStats}
+            />
           </TabsContent>
 
           <TabsContent value="status">
-            <LookupManager title="Property Status" description="Manage property status" endpoint="property-status" icon={<Sparkles className="h-5 w-5" />} onUpdate={fetchStats} />
+            <LookupManager
+              title="Property Status"
+              description="Manage property status"
+              endpoint="property-status"
+              icon={<Sparkles className="h-5 w-5" />}
+              onUpdate={fetchStats}
+            />
           </TabsContent>
 
           <TabsContent value="communities">
-            <LookupManager title="Communities" description="Manage communities and locations" endpoint="communities" icon={<MapPin className="h-5 w-5" />} onUpdate={fetchStats} />
+            <LookupManager
+              title="Communities"
+              description="Manage communities and locations"
+              endpoint="communities"
+              icon={<MapPin className="h-5 w-5" />}
+              onUpdate={fetchStats}
+            />
           </TabsContent>
 
           <TabsContent value="developers">
-            <LookupManager title="Developers" description="Manage property developers" endpoint="developers" icon={<Building2 className="h-5 w-5" />} hasLogo onUpdate={fetchStats} />
+            <LookupManager
+              title="Developers"
+              description="Manage property developers"
+              endpoint="developers"
+              icon={<Building2 className="h-5 w-5" />}
+              hasLogo
+              onUpdate={fetchStats}
+            />
           </TabsContent>
 
           <TabsContent value="amenities">
-            <LookupManager title="Amenities" description="Manage property amenities" endpoint="amenities" icon={<Settings className="h-5 w-5" />} onUpdate={fetchStats} />
+            <LookupManager
+              title="Amenities"
+              description="Manage property amenities"
+              endpoint="amenities"
+              icon={<Settings className="h-5 w-5" />}
+              onUpdate={fetchStats}
+            />
           </TabsContent>
 
           <TabsContent value="features">
-            <LookupManager title="Property Features" description="Manage property features" endpoint="features" icon={<Sparkles className="h-5 w-5" />} onUpdate={fetchStats} />
+            <LookupManager
+              title="Property Features"
+              description="Manage property features"
+              endpoint="features"
+              icon={<Sparkles className="h-5 w-5" />}
+              onUpdate={fetchStats}
+            />
           </TabsContent>
 
           <TabsContent value="views">
-            <LookupManager title="View Types" description="Manage view types" endpoint="view-types" icon={<Eye className="h-5 w-5" />} onUpdate={fetchStats} />
+            <LookupManager
+              title="View Types"
+              description="Manage view types"
+              endpoint="view-types"
+              icon={<Eye className="h-5 w-5" />}
+              onUpdate={fetchStats}
+            />
           </TabsContent>
 
           <TabsContent value="users">
@@ -270,10 +344,13 @@ const AdminPage = () => {
 
         {/* Drawer Dialog */}
         {drawerItem !== undefined && (
-          <Dialog open={drawerItem !== undefined} onOpenChange={() => setDrawerItem(undefined)}>
+          <Dialog
+            open={drawerItem !== undefined}
+            onOpenChange={() => setDrawerItem(undefined)}
+          >
             <DialogContent className="max-w-xl text-center p-4 bg-accent-foreground max-h-screen overflow-y-auto">
-              <DialogHeader >
-                <DialogTitle className={'text-center font-bold text-primary'} >
+              <DialogHeader>
+                <DialogTitle className={"text-center font-bold text-primary"}>
                   {drawerItem?.id ? "Edit Property" : "Create New Property"}
                 </DialogTitle>
                 <DialogDescription className="text-center">
