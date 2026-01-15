@@ -2,11 +2,11 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import PropertyCard from "./property/PropertyCard";
 
-const AnimatedGridItem = ({ children, index }) => {
+const AnimatedGridItem = ({ children, viewMode, index }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { amount: 0.5, triggerOnce: true });
 
-  return (
+  return viewMode !== "list" ? (
     <motion.div
       ref={ref}
       initial={{ scale: 0.8, opacity: 0 }}
@@ -15,8 +15,11 @@ const AnimatedGridItem = ({ children, index }) => {
     >
       {children}
     </motion.div>
+  ) : (
+    <div>{children}</div>
   );
 };
+
 
 const AnimatedPropertyGrid = ({ properties, viewMode = "grid" }) => {
   console.log("AnimatedPropertyGrid received properties:", properties);
@@ -25,11 +28,11 @@ const AnimatedPropertyGrid = ({ properties, viewMode = "grid" }) => {
       className={`grid gap-6 ${
         viewMode === "grid"
           ? "grid-cols-1 md:grid-cols-3 lg:grid-cols-4"
-          : "grid-cols-1"
+          : "grid-cols-1 "
       }`}
     >
       {properties.map((property, index) => (
-        <AnimatedGridItem key={property.id}  index={index}>
+        <AnimatedGridItem key={property.id} viewMode={viewMode} index={index}>
           <PropertyCard viewMode={viewMode} property={property} />
         </AnimatedGridItem>
       ))}

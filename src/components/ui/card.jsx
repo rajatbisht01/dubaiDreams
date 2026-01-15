@@ -1,12 +1,22 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-
+import {motion} from "framer-motion";
 const Card = React.forwardRef(({ className, ...props }, ref) => (
+ <motion.div
+ whileHover={{
+        scale: 1.05,
+        transition: { duration: 0.2 },
+        transitionBehavior: "startToEnd",
+      }}
+ >
+
+
   <div
     ref={ref}
     className={cn("rounded-xl shadow-2xl  bg-white text-card-foreground ", className)}
     {...props}
   />
+   </motion.div>
 ));
 Card.displayName = "Card";
 

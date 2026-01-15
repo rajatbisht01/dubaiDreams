@@ -106,9 +106,9 @@ export default function HeroCarousel({ featuredProperties = [] }) {
         <p className="text-sm text-gray-300">{slide.developer}</p>
         <p className="text-lg font-semibold mt-2">{slide.price}</p>
         {slide.location && <p className="text-sm text-gray-200 mt-1">{slide.location}</p>}
-        <p className="text-sm text-gray-200 mt-1">
+        {/* <p className="text-sm text-gray-200 mt-1">
           {slide.bedrooms} Beds • {slide.bathrooms} Baths
-        </p>
+        </p> */}
       </div>
     </motion.div>
   </AnimatePresence>
