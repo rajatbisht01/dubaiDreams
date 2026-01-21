@@ -9,8 +9,10 @@ import { usePropertyStore } from '@/store/propertyStore';
 
 export default function HeroCarousel({ featuredProperties = [] }) {
   const formatPrice = usePropertyStore(state => state.formatPrice);
+  const currency = usePropertyStore(state => state.currency);
 
   // Build slides: one per property, first image only
+  // Add currency as dependency so slides rebuild when currency changes
   const slides = useMemo(() => {
     if (!Array.isArray(featuredProperties) || featuredProperties.length === 0) {
       return [{
@@ -35,7 +37,7 @@ export default function HeroCarousel({ featuredProperties = [] }) {
       bathrooms: property.bathrooms ?? '-',
       id: property.id ?? '_'
     }));
-  }, [featuredProperties, formatPrice]);
+  }, [featuredProperties, formatPrice, currency]); // Added currency dependency
 
   const [[currentSlide, direction], setCurrentSlide] = useState([0, 0]);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -64,7 +66,7 @@ export default function HeroCarousel({ featuredProperties = [] }) {
   const slide = slides[currentSlide];
 
   return (
-   <section className="relative h-screen w-full overflow-hidden  overflow-x-hidden overflow-y-hidden">
+   <section className="relative h-screen w-full overflow-hidden overflow-x-hidden overflow-y-hidden">
   {/* Left Fixed Content */}
   <div className="absolute gap-10 top-0 left-0 z-10 h-full flex flex-col justify-center px-10 lg:px-22 pointer-events-none">
     <h1 className="text-5xl lg:text-7xl max-w-4xl font-bold text-white mb-4">
