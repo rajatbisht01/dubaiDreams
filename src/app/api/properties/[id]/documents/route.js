@@ -1,3 +1,4 @@
+//api/properties/[id]/documents/route.js
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -5,7 +6,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export async function POST(req, { params }) {
   try {
     const supabase = await supabaseServer();
-    const propertyId = params.id;
+    const { id: propertyId } = await params; // ← AWAIT params
 
     const { document_type_id, title, file_url, sort_order } = await req.json();
 

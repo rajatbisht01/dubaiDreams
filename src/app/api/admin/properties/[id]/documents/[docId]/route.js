@@ -1,3 +1,4 @@
+//api/admin/properties/[id]/documents/[docId]/route.js
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
