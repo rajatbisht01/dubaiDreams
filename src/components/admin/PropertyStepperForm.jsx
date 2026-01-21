@@ -610,32 +610,73 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
           </div>
         </Step>
 
-        {/* Step 2: Pricing */}
+       
+      {/* Step 2: Pricing */}
         <Step>
           <div className="space-y-4">
             <Label>Starting Price</Label>
             <Input value={payload.starting_price} onChange={(e) => setField("starting_price", e.target.value)} type="number" />
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Price Range</Label>
-                <Input value={payload.price_range} onChange={(e) => setField("price_range", e.target.value)} />
+            <div>
+              <Label>Price Range</Label>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <Input 
+                  type="number"
+                  placeholder="Min Price" 
+                  value={payload.price_range ? payload.price_range.split('-')[0] : ''} 
+                  onChange={(e) => {
+                    const min = e.target.value;
+                    const max = payload.price_range ? payload.price_range.split('-')[1] : '';
+                    setField("price_range", min && max ? `${min}-${max}` : min);
+                  }} 
+                />
+                <Input 
+                  type="number"
+                  placeholder="Max Price" 
+                  value={payload.price_range ? payload.price_range.split('-')[1] : ''} 
+                  onChange={(e) => {
+                    const min = payload.price_range ? payload.price_range.split('-')[0] : '';
+                    const max = e.target.value;
+                    setField("price_range", min && max ? `${min}-${max}` : max);
+                  }} 
+                />
               </div>
-               <div>
-                <Label>Estimated yield</Label>
-                <Input value={payload.estimated_yield} onChange={(e) => setField("estimated_yield", e.target.value)} />
-              </div>
-              
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-             <div>
+              <div>
                 <Label>Bedrooms</Label>
                 <Input value={payload.bedrooms} onChange={(e) => setField("bedrooms", e.target.value)} />
               </div>
               <div>
-                <Label>Size Range</Label>
-                <Input value={payload.size_range} onChange={(e) => setField("size_range", e.target.value)} />
+                <Label>Estimated Yield</Label>
+                <Input value={payload.estimated_yield} onChange={(e) => setField("estimated_yield", e.target.value)} />
+              </div>
+            </div>
+
+            <div>
+              <Label>Size Range (sqft)</Label>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <Input 
+                  type="number"
+                  placeholder="Min Size" 
+                  value={payload.size_range ? payload.size_range.split('-')[0] : ''} 
+                  onChange={(e) => {
+                    const min = e.target.value;
+                    const max = payload.size_range ? payload.size_range.split('-')[1] : '';
+                    setField("size_range", min && max ? `${min}-${max}` : min);
+                  }} 
+                />
+                <Input 
+                  type="number"
+                  placeholder="Max Size" 
+                  value={payload.size_range ? payload.size_range.split('-')[1] : ''} 
+                  onChange={(e) => {
+                    const min = payload.size_range ? payload.size_range.split('-')[0] : '';
+                    const max = e.target.value;
+                    setField("size_range", min && max ? `${min}-${max}` : max);
+                  }} 
+                />
               </div>
             </div>
 
