@@ -72,7 +72,7 @@ const Hero = () => {
       </div> */}
 
       <div className="relative container mx-auto px-4 py-2">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {/* Hero Text */}
           <div className="text-center mb-8 animate-in fade-in duration-700">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-black">
