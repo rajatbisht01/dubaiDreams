@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion, useMotionValue } from 'framer-motion';
 
 const DRAG_BUFFER = 0;
 const VELOCITY_THRESHOLD = 500;
@@ -70,9 +70,22 @@ export default function Carousel({
     }
   };
 
-
-
- 
+  // Calculate rotation for each item based on current position
+  const getRotateY = (index) => {
+    const currentX = -(currentIndex * trackItemOffset);
+    const itemPosition = -(index * trackItemOffset);
+    const distance = currentX - itemPosition;
+    
+    // Calculate rotation based on distance from center
+    // Adjust these values to control rotation intensity
+    const maxRotation = 90;
+    const rotationRange = trackItemOffset;
+    
+    if (distance > rotationRange) return maxRotation;
+    if (distance < -rotationRange) return -maxRotation;
+    
+    return (distance / rotationRange) * maxRotation;
+  };
 
   return (
     <div
@@ -85,22 +98,15 @@ export default function Carousel({
     >
       <motion.div
         className="flex"
-     
-     
         style={{
           gap: `${gap}px`,
           x
         }}
-     
         animate={{ x: -(currentIndex * trackItemOffset) }}
         transition={effectiveTransition}
         onAnimationComplete={handleAnimationComplete}
       >
         {carouselItems.map((item, index) => {
-          const range = [-(index + 1) * trackItemOffset, -index * trackItemOffset, -(index - 1) * trackItemOffset];
-          const outputRange = [90, 0, -90];
-          const rotateY = useTransform(x, range, outputRange, { clamp: false });
-
           return (
             <motion.div
               key={index}
@@ -108,7 +114,7 @@ export default function Carousel({
               style={{
                 width: `100%`,
                 height: '100%',
-                rotateY,
+                rotateY: getRotateY(index),
                 borderRadius: round ? '50%' : '0px',
               }}
               transition={effectiveTransition}
