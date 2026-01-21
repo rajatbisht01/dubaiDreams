@@ -427,7 +427,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
         try {
           await Promise.allSettled([
             deleteBatch(`/api/properties/${propertyId}/images`, payload.imagesToDelete),
-            deleteBatch(`/api/properties/${propertyId}/documents`, payload.documentsToDelete),
+            deleteBatch(`/api/admin/properties/${propertyId}/documents`, payload.documentsToDelete),
             deleteBatch(`/api/properties/${propertyId}/floor-plans`, payload.floorPlansToDelete),
           ]);
 
