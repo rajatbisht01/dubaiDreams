@@ -343,149 +343,202 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     );
   }
 
-  async function handleFinalSubmit() {
-    setLoading(true);
-    setError(null);
+ // In PropertyStepperForm.jsx
+// Replace the handleFinalSubmit function with this:
 
-    const successMessage = isEdit ? "Property updated!" : "Property created!";
-    
+async function handleFinalSubmit() {
+  setLoading(true);
+  setError(null);
+
+  const successMessage = isEdit ? "Property updated!" : "Property created!";
+  
+  try {
+    const propertyPayload = {
+      title: payload.title,
+      isFeatured: payload.isFeatured,
+      slug: payload.slug?.trim() || payload.title?.toLowerCase().replace(/\s+/g, "-").slice(0, 200),
+      description: payload.description,
+      developer_id: payload.developer_id,
+      community_id: payload.community_id,
+      property_type_id: payload.property_type_id,
+      status_id: payload.status_id,
+      latitude: payload.latitude || null,
+      longitude: payload.longitude || null,
+      starting_price: payload.starting_price || null,
+      price_range: payload.price_range || null,
+      bedrooms: payload.bedrooms || null,
+      bathrooms: payload.bathrooms || null,
+      size_range: payload.size_range || null,
+      handover: payload.handover || null,
+      roi: payload.roi || null,
+      service_charge: payload.service_charge || null,
+      market_price_psf: payload.market_price_psf || null,
+      rental_price_psf: payload.rental_price_psf || null,
+      annual_rent: payload.annual_rent || null,
+      estimated_yield: payload.estimated_yield || null,
+      meta_title: payload.meta_title || null,
+      meta_description: payload.meta_description || null,
+      meta_keywords: payload.meta_keywords || null,
+      og_image_url: payload.og_image_url || null,
+      amenities: payload.amenities || [],
+      features: payload.features || [],
+      views: payload.views || [],
+      nearby_points: payload.nearby_points || [],
+      construction_updates: payload.construction_updates || [],
+    };
+
+    console.log("[Form Submit] Payload:", {
+      latitude: propertyPayload.latitude,
+      longitude: propertyPayload.longitude,
+      amenities: propertyPayload.amenities,
+      features: propertyPayload.features,
+      views: propertyPayload.views,
+      nearby_count: propertyPayload.nearby_points?.length,
+      updates_count: propertyPayload.construction_updates?.length
+    });
+
+    // Step 1: Save property
+    const url = isEdit ? `/api/admin/properties/${item.id}` : `/api/admin/properties`;
+    const method = isEdit ? "PUT" : "POST";
+
+    const saveRes = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(propertyPayload),
+    });
+
+    if (!saveRes.ok) {
+      const err = await saveRes.json().catch(() => ({ error: "save error" }));
+      throw new Error(err.error || "Failed to save property");
+    }
+
+    const saved = await saveRes.json();
+    const propertyId = saved.id;
+
+    if (!propertyId) throw new Error("No property ID returned");
+
+    // Step 2: Delete old files
     try {
-      const propertyPayload = {
-        title: payload.title,
-        isFeatured: payload.isFeatured,
-        slug: payload.slug?.trim() || payload.title?.toLowerCase().replace(/\s+/g, "-").slice(0, 200),
-        description: payload.description,
-        developer_id: payload.developer_id,
-        community_id: payload.community_id,
-        property_type_id: payload.property_type_id,
-        status_id: payload.status_id,
-        latitude: payload.latitude || null,
-        longitude: payload.longitude || null,
-        starting_price: payload.starting_price || null,
-        price_range: payload.price_range || null,
-        bedrooms: payload.bedrooms || null,
-        bathrooms: payload.bathrooms || null,
-        size_range: payload.size_range || null,
-        handover: payload.handover || null,
-        roi: payload.roi || null,
-        service_charge: payload.service_charge || null,
-        market_price_psf: payload.market_price_psf || null,
-        rental_price_psf: payload.rental_price_psf || null,
-        annual_rent: payload.annual_rent || null,
-        estimated_yield: payload.estimated_yield || null,
-        meta_title: payload.meta_title || null,
-        meta_description: payload.meta_description || null,
-        meta_keywords: payload.meta_keywords || null,
-        og_image_url: payload.og_image_url || null,
-        amenities: payload.amenities || [],
-        features: payload.features || [],
-        views: payload.views || [],
-        nearby_points: payload.nearby_points || [],
-        construction_updates: payload.construction_updates || [],
-      };
+      await Promise.allSettled([
+        deleteBatch(`/api/admin/properties/${propertyId}/images`, payload.imagesToDelete),
+        deleteBatch(`/api/admin/properties/${propertyId}/documents`, payload.documentsToDelete),
+        deleteBatch(`/api/admin/properties/${propertyId}/floor-plans`, payload.floorPlansToDelete),
+      ]);
+    } catch (delErr) {
+      console.error("Deletion error:", delErr);
+      // Continue anyway
+    }
 
-      console.log("[Form Submit] Payload:", {
-        latitude: propertyPayload.latitude,
-        longitude: propertyPayload.longitude,
-        amenities: propertyPayload.amenities,
-        features: propertyPayload.features,
-        views: propertyPayload.views,
-        nearby_count: propertyPayload.nearby_points?.length,
-        updates_count: propertyPayload.construction_updates?.length
-      });
+    // Step 3: Upload new files (BEFORE closing the form)
+    console.log("[Upload] Starting file uploads...");
+    
+    let imageUrls = [];
+    let documentData = [];
+    let floorPlanData = [];
 
-      const url = isEdit ? `/api/admin/properties/${item.id}` : `/api/admin/properties`;
-      const method = isEdit ? "PUT" : "POST";
-
-      const saveRes = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(propertyPayload),
-      });
-
-      if (!saveRes.ok) {
-        const err = await saveRes.json().catch(() => ({ error: "save error" }));
-        throw new Error(err.error || "Failed to save property");
+    try {
+      // Upload images
+      if (payload.imageFiles?.length > 0) {
+        console.log(`[Upload] Uploading ${payload.imageFiles.length} images...`);
+        imageUrls = await Promise.all(
+          payload.imageFiles.map(f => uploadFile(f, "image"))
+        );
+        console.log("[Upload] Images uploaded:", imageUrls.length);
       }
 
-      const saved = await saveRes.json();
-      const propertyId = saved.id;
-
-      if (!propertyId) throw new Error("No property ID returned");
-
-      // Clear draft on successful creation
-      if (!isEdit) {
-        clearDraft();
-      }
-
-      toast.success(successMessage);
-      onSuccess();
-      onClose();
-      setLoading(false);
-
-      (async () => {
-        try {
-          await Promise.allSettled([
-            deleteBatch(`/api/properties/${propertyId}/images`, payload.imagesToDelete),
-            deleteBatch(`/api/admin/properties/${propertyId}/documents`, payload.documentsToDelete),
-            deleteBatch(`/api/properties/${propertyId}/floor-plans`, payload.floorPlansToDelete),
-          ]);
-
-          const [imageUrls, documentData, floorPlanData] = await Promise.all([
-            Promise.all((payload.imageFiles || []).map(f => uploadFile(f, "image"))),
-            Promise.all((payload.documentFiles || []).map(async (d) => ({
-              url: await uploadFile(d.file, "document"),
+      // Upload documents
+      if (payload.documentFiles?.length > 0) {
+        console.log(`[Upload] Uploading ${payload.documentFiles.length} documents...`);
+        documentData = await Promise.all(
+          payload.documentFiles.map(async (d) => {
+            console.log(`[Upload] Uploading document: ${d.file.name}`);
+            const url = await uploadFile(d.file, "document");
+            console.log(`[Upload] Document uploaded: ${url}`);
+            return {
+              url: url,
               title: d.title,
               document_type_id: d.document_type_id
-            }))),
-            Promise.all((payload.floorPlanFiles || []).map(async (fp) => ({
-              url: await uploadFile(fp.file, "document"),
+            };
+          })
+        );
+        console.log("[Upload] Documents uploaded:", documentData.length);
+      }
+
+      // Upload floor plans
+      if (payload.floorPlanFiles?.length > 0) {
+        console.log(`[Upload] Uploading ${payload.floorPlanFiles.length} floor plans...`);
+        floorPlanData = await Promise.all(
+          payload.floorPlanFiles.map(async (fp) => {
+            const url = await uploadFile(fp.file, "document");
+            return {
+              url: url,
               title: fp.title,
               size: fp.size
-            })))
-          ]);
+            };
+          })
+        );
+        console.log("[Upload] Floor plans uploaded:", floorPlanData.length);
+      }
 
-          await Promise.allSettled([
-            postBatch(
-              `/api/properties/${propertyId}/images`,
-              imageUrls.map((url, idx) => ({
-                image_url: url,
-                isFeatured: false,
-                sort_order: idx,
-              }))
-            ),
-            postBatch(
-              `/api/properties/${propertyId}/documents`,
-              documentData.map((doc, idx) => ({
-                document_type_id: doc.document_type_id,
-                title: doc.title,
-                file_url: doc.url,
-                sort_order: idx,
-              }))
-            ),
-            postBatch(
-              `/api/properties/${propertyId}/floor-plans`,
-              floorPlanData.map((fp) => ({
-                title: fp.title,
-                size: fp.size,
-                pdf_url: fp.url,
-              }))
-            ),
-          ]);
-
-        } catch (bgErr) {
-          console.error("Background upload error:", bgErr);
-          toast.error("Some media uploads failed. Please re-edit the property.");
-        }
-      })();
-
-    } catch (err) {
-      console.error("Property save error", err);
-      setError(err.message || "Error");
+    } catch (uploadErr) {
+      console.error("[Upload] Upload error:", uploadErr);
       setLoading(false);
-      toast.error(err.message || "Failed to save property");
+      setError("File upload failed: " + uploadErr.message);
+      toast.error("File upload failed. Property saved but files not uploaded.");
+      return; // Don't close the form, let user retry
     }
+
+    // Step 4: Save uploaded files to database
+    try {
+      await Promise.allSettled([
+        postBatch(
+          `/api/properties/${propertyId}/images`,
+          imageUrls.map((url, idx) => ({
+            image_url: url,
+            isFeatured: false,
+            sort_order: idx,
+          }))
+        ),
+        postBatch(
+          `/api/properties/${propertyId}/documents`,
+          documentData.map((doc, idx) => ({
+            document_type_id: doc.document_type_id,
+            title: doc.title,
+            file_url: doc.url,
+            sort_order: idx,
+          }))
+        ),
+        postBatch(
+          `/api/properties/${propertyId}/floor-plans`,
+          floorPlanData.map((fp) => ({
+            title: fp.title,
+            size: fp.size,
+            pdf_url: fp.url,
+          }))
+        ),
+      ]);
+    } catch (postErr) {
+      console.error("Post-batch error:", postErr);
+      toast.warning("Property saved but some files may not be linked properly.");
+    }
+
+    // Success!
+    if (!isEdit) {
+      clearDraft();
+    }
+
+    toast.success(successMessage);
+    setLoading(false);
+    onSuccess();
+    onClose();
+
+  } catch (err) {
+    console.error("Property save error", err);
+    setError(err.message || "Error");
+    setLoading(false);
+    toast.error(err.message || "Failed to save property");
   }
+}
 
   function removeFileFromList(listKey, index) {
     setPayload((p) => {
