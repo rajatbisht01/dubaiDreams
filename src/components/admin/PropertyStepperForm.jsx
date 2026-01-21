@@ -343,8 +343,65 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     );
   }
 
- // In PropertyStepperForm.jsx
-// Replace the handleFinalSubmit function with this:
+// In PropertyStepperForm.jsx
+// Replace the uploadFile function with this version that logs the actual error:
+
+async function uploadFile(file, fileType) {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("fileType", fileType);
+  
+  console.log("[uploadFile] Starting upload:", {
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: fileType,
+    mimeType: file.type
+  });
+  
+  try {
+    const res = await fetch("/api/upload", { 
+      method: "POST", 
+      body: form 
+    });
+    
+    console.log("[uploadFile] Response status:", res.status);
+    
+    // Get response body regardless of status
+    const responseText = await res.text();
+    console.log("[uploadFile] Response body:", responseText);
+    
+    if (!res.ok) {
+      let errorData;
+      try {
+        errorData = JSON.parse(responseText);
+      } catch (e) {
+        errorData = { error: responseText || "Upload failed" };
+      }
+      
+      console.error("[uploadFile] Upload failed:", {
+        status: res.status,
+        statusText: res.statusText,
+        error: errorData,
+        headers: Object.fromEntries(res.headers.entries())
+      });
+      
+      throw new Error(errorData.error || `Upload failed with status ${res.status}`);
+    }
+    
+    const data = JSON.parse(responseText);
+    console.log("[uploadFile] Upload successful:", data.file);
+    return data.file;
+    
+  } catch (error) {
+    console.error("[uploadFile] Exception:", {
+      message: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
+}
+
+// Keep the rest of handleFinalSubmit as is, but add more detailed error handling:
 
 async function handleFinalSubmit() {
   setLoading(true);
@@ -387,16 +444,6 @@ async function handleFinalSubmit() {
       construction_updates: payload.construction_updates || [],
     };
 
-    console.log("[Form Submit] Payload:", {
-      latitude: propertyPayload.latitude,
-      longitude: propertyPayload.longitude,
-      amenities: propertyPayload.amenities,
-      features: propertyPayload.features,
-      views: propertyPayload.views,
-      nearby_count: propertyPayload.nearby_points?.length,
-      updates_count: propertyPayload.construction_updates?.length
-    });
-
     // Step 1: Save property
     const url = isEdit ? `/api/admin/properties/${item.id}` : `/api/admin/properties`;
     const method = isEdit ? "PUT" : "POST";
@@ -426,11 +473,10 @@ async function handleFinalSubmit() {
       ]);
     } catch (delErr) {
       console.error("Deletion error:", delErr);
-      // Continue anyway
     }
 
-    // Step 3: Upload new files (BEFORE closing the form)
-    console.log("[Upload] Starting file uploads...");
+    // Step 3: Upload new files
+    console.log("[handleFinalSubmit] Starting file uploads...");
     
     let imageUrls = [];
     let documentData = [];
@@ -439,34 +485,49 @@ async function handleFinalSubmit() {
     try {
       // Upload images
       if (payload.imageFiles?.length > 0) {
-        console.log(`[Upload] Uploading ${payload.imageFiles.length} images...`);
+        console.log(`[handleFinalSubmit] Uploading ${payload.imageFiles.length} images...`);
         imageUrls = await Promise.all(
-          payload.imageFiles.map(f => uploadFile(f, "image"))
+          payload.imageFiles.map((f, idx) => {
+            console.log(`[handleFinalSubmit] Uploading image ${idx + 1}/${payload.imageFiles.length}`);
+            return uploadFile(f, "image");
+          })
         );
-        console.log("[Upload] Images uploaded:", imageUrls.length);
+        console.log("[handleFinalSubmit] All images uploaded successfully");
       }
 
-      // Upload documents
+      // Upload documents - ONE AT A TIME to see which fails
       if (payload.documentFiles?.length > 0) {
-        console.log(`[Upload] Uploading ${payload.documentFiles.length} documents...`);
-        documentData = await Promise.all(
-          payload.documentFiles.map(async (d) => {
-            console.log(`[Upload] Uploading document: ${d.file.name}`);
+        console.log(`[handleFinalSubmit] Uploading ${payload.documentFiles.length} documents...`);
+        
+        for (let i = 0; i < payload.documentFiles.length; i++) {
+          const d = payload.documentFiles[i];
+          console.log(`[handleFinalSubmit] Uploading document ${i + 1}/${payload.documentFiles.length}: ${d.file.name}`);
+          
+          try {
             const url = await uploadFile(d.file, "document");
-            console.log(`[Upload] Document uploaded: ${url}`);
-            return {
+            documentData.push({
               url: url,
               title: d.title,
               document_type_id: d.document_type_id
-            };
-          })
-        );
-        console.log("[Upload] Documents uploaded:", documentData.length);
+            });
+            console.log(`[handleFinalSubmit] Document ${i + 1} uploaded successfully`);
+          } catch (docErr) {
+            console.error(`[handleFinalSubmit] Failed to upload document ${i + 1}:`, {
+              fileName: d.file.name,
+              fileSize: d.file.size,
+              fileType: d.file.type,
+              error: docErr.message
+            });
+            throw new Error(`Failed to upload document "${d.file.name}": ${docErr.message}`);
+          }
+        }
+        
+        console.log("[handleFinalSubmit] All documents uploaded successfully");
       }
 
       // Upload floor plans
       if (payload.floorPlanFiles?.length > 0) {
-        console.log(`[Upload] Uploading ${payload.floorPlanFiles.length} floor plans...`);
+        console.log(`[handleFinalSubmit] Uploading ${payload.floorPlanFiles.length} floor plans...`);
         floorPlanData = await Promise.all(
           payload.floorPlanFiles.map(async (fp) => {
             const url = await uploadFile(fp.file, "document");
@@ -477,15 +538,15 @@ async function handleFinalSubmit() {
             };
           })
         );
-        console.log("[Upload] Floor plans uploaded:", floorPlanData.length);
+        console.log("[handleFinalSubmit] All floor plans uploaded");
       }
 
     } catch (uploadErr) {
-      console.error("[Upload] Upload error:", uploadErr);
+      console.error("[handleFinalSubmit] Upload error:", uploadErr);
       setLoading(false);
       setError("File upload failed: " + uploadErr.message);
-      toast.error("File upload failed. Property saved but files not uploaded.");
-      return; // Don't close the form, let user retry
+      toast.error("File upload failed: " + uploadErr.message);
+      return;
     }
 
     // Step 4: Save uploaded files to database
