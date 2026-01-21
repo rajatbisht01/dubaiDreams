@@ -614,11 +614,11 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       {/* Step 2: Pricing */}
         <Step>
           <div className="space-y-4">
-            <Label>Starting Price</Label>
+            <Label>Starting Price (AED)</Label>
             <Input value={payload.starting_price} onChange={(e) => setField("starting_price", e.target.value)} type="number" />
 
             <div>
-              <Label>Price Range</Label>
+              <Label>Price Range (AED)</Label>
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <Input 
                   type="number"
@@ -649,7 +649,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                 <Input value={payload.bedrooms} onChange={(e) => setField("bedrooms", e.target.value)} />
               </div>
               <div>
-                <Label>Estimated Yield</Label>
+                <Label>Estimated Yield (%)</Label>
                 <Input value={payload.estimated_yield} onChange={(e) => setField("estimated_yield", e.target.value)} />
               </div>
             </div>
