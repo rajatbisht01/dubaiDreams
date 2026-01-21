@@ -49,7 +49,7 @@ const PropertyGrid = ({ properties, isAdmin = true, onEdit, onDelete }) => {
                 Price: {property.starting_price ?? "N/A"}
               </p>
               <p className="text-sm text-muted-foreground">
-                Beds: {property.bedrooms ?? "N/A"}, Baths: {property.bathrooms ?? "N/A"}, Area: {property.size_range ?? "N/A"}
+                Beds: {property.bedrooms ?? "N/A"}, Area: {property.size_range ?? "N/A"}
               </p>
               <p className="text-sm text-muted-foreground">
                 Community: {property.communities?.name ?? "N/A"}
