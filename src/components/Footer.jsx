@@ -47,7 +47,7 @@ const Footer = () => {
               <ul className="space-y-3">
                 <li><a href="#properties" className="hover:text-white transition-colors">Properties</a></li>
                 <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#agents" className="hover:text-white transition-colors">Our Agents</a></li>
+                {/* <li><a href="#agents" className="hover:text-white transition-colors">Our Agents</a></li> */}
                 <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
@@ -56,10 +56,10 @@ const Footer = () => {
             <div>
               <h4 className="text-lg font-semibold text-white mb-6">Services</h4>
               <ul className="space-y-3">
-                <li><a href="#buy" className="hover:text-white transition-colors">Buy Property</a></li>
-                <li><a href="#sell" className="hover:text-white transition-colors">Sell Property</a></li>
-                <li><a href="#rent" className="hover:text-white transition-colors">Rent Property</a></li>
-                <li><a href="#consulting" className="hover:text-white transition-colors">Property Consulting</a></li>
+                {/* <li><a href="#buy" className="hover:text-white transition-colors">Buy Property</a></li> */}
+                {/* <li><a href="#sell" className="hover:text-white transition-colors">Sell Property</a></li> */}
+                <li><a href="/properties" className="hover:text-white transition-colors">View Properties</a></li>
+                <li><a href="/contact" className="hover:text-white transition-colors">Property Consulting</a></li>
                 <li><a href="#legal" className="hover:text-white transition-colors">Legal & Documentation</a></li>
               </ul>
             </div>
