@@ -621,16 +621,17 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
                 <Label>Price Range</Label>
                 <Input value={payload.price_range} onChange={(e) => setField("price_range", e.target.value)} />
               </div>
-              <div>
-                <Label>Bedrooms</Label>
-                <Input value={payload.bedrooms} onChange={(e) => setField("bedrooms", e.target.value)} />
+               <div>
+                <Label>Estimated yield</Label>
+                <Input value={payload.estimated_yield} onChange={(e) => setField("estimated_yield", e.target.value)} />
               </div>
+              
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Bathrooms</Label>
-                <Input value={payload.bathrooms} onChange={(e) => setField("bathrooms", e.target.value)} />
+             <div>
+                <Label>Bedrooms</Label>
+                <Input value={payload.bedrooms} onChange={(e) => setField("bedrooms", e.target.value)} />
               </div>
               <div>
                 <Label>Size Range</Label>

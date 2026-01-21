@@ -1,5 +1,48 @@
 "use client";
 
+// Loading skeleton components
+const PropertyDetailSkeleton = () => (
+  <div className="min-h-screen bg-background">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Image skeleton */}
+          <div className="aspect-video bg-muted rounded-lg animate-pulse" />
+          {/* Content skeletons */}
+          <Card className="p-6 animate-pulse">
+            <div className="h-6 bg-muted rounded w-1/3 mb-4" />
+            <div className="space-y-3">
+              <div className="h-4 bg-muted rounded w-full" />
+              <div className="h-4 bg-muted rounded w-5/6" />
+              <div className="h-4 bg-muted rounded w-4/6" />
+            </div>
+          </Card>
+          <Card className="p-6 animate-pulse">
+            <div className="h-6 bg-muted rounded w-1/3 mb-4" />
+            <div className="space-y-3">
+              <div className="h-4 bg-muted rounded w-full" />
+              <div className="h-4 bg-muted rounded w-5/6" />
+            </div>
+          </Card>
+        </div>
+        {/* Sidebar skeleton */}
+        <div>
+          <Card className="p-6 animate-pulse">
+            <div className="h-6 bg-muted rounded w-2/3 mb-4" />
+            <div className="space-y-3">
+              <div className="h-10 bg-muted rounded" />
+              <div className="h-10 bg-muted rounded" />
+              <div className="h-10 bg-muted rounded" />
+              <div className="h-20 bg-muted rounded" />
+              <div className="h-12 bg-muted rounded" />
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { usePropertyStore } from "@/store/propertyStore";
 import { Button } from "@/components/ui/button";
@@ -19,37 +62,15 @@ import { toast } from "sonner";
 import PropertyGallery from "@/components/property/PropertyGallery";
 import AnimatedPropertyGrid from "@/components/AnimatedPropertyGrid";
 
-// Loading skeleton components
-const StatSkeleton = () => (
-  <div className="flex items-center gap-3 animate-pulse">
-    <div className="p-2 bg-muted rounded-lg w-10 h-10" />
-    <div className="flex-1">
-      <div className="h-3 bg-muted rounded w-16 mb-2" />
-      <div className="h-4 bg-muted rounded w-20" />
-    </div>
-  </div>
-);
-
-const CardSkeleton = () => (
-  <Card className="p-6 animate-pulse">
-    <div className="h-6 bg-muted rounded w-1/3 mb-4" />
-    <div className="space-y-3">
-      <div className="h-4 bg-muted rounded w-full" />
-      <div className="h-4 bg-muted rounded w-5/6" />
-      <div className="h-4 bg-muted rounded w-4/6" />
-    </div>
-  </Card>
-);
-
 // Optimized helper functions
 const flattenPropertyData = (data) => {
   return {
     ...data,
-    developer: data.developers?.name || "Unknown Developer",
+    developer: data.developers?.name || "",
     developerLogo: data.developers?.logo_url || null,
-    community: data.communities?.name || "Unknown Community",
-    type: data.property_types?.name || "Unknown Type",
-    status: data.property_status_types?.name || "Unknown Status",
+    community: data.communities?.name || "",
+    type: data.property_types?.name || "",
+    status: data.property_status_types?.name || "",
     amenities: data.property_amenities?.map(item => item.amenities?.name).filter(Boolean) || [],
     features: data.property_features?.map(item => item.features?.name).filter(Boolean) || [],
     views: data.property_views?.map(item => item.view_types?.name).filter(Boolean) || [],
@@ -83,10 +104,6 @@ const QuickActions = ({ onShare, onSave }) => (
       <Share2 className="h-4 w-4" />
       Share
     </Button>
-    {/* <Button variant="outline" size="sm" onClick={onSave} className="gap-2">
-      <Heart className="h-4 w-4" />
-      Save
-    </Button> */}
   </div>
 );
 
@@ -115,7 +132,13 @@ const InfoSection = ({ title, icon: Icon, children }) => (
 );
 
 const PropertyDetail = ({ params }) => {
-  const { fetchPropertyById, fetchProperties, loading } = usePropertyStore();
+  const fetchPropertyById = usePropertyStore(state => state.fetchPropertyById);
+  const fetchProperties = usePropertyStore(state => state.fetchProperties);
+  const loading = usePropertyStore(state => state.loading);
+  const currency = usePropertyStore(state => state.currency);
+  const formatPrice = usePropertyStore(state => state.formatPrice);
+  const formatPriceRange = usePropertyStore(state => state.formatPriceRange);
+  
   const [property, setProperty] = useState(null);
   const [similarProperties, setSimilarProperties] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -144,7 +167,6 @@ const PropertyDetail = ({ params }) => {
     if (!property) return [];
     return [
       { icon: Bed, label: "Bedrooms", value: property.bedrooms || "N/A" },
-      { icon: Bath, label: "Bathrooms", value: property.bathrooms || "N/A" },
       { icon: Square, label: "Size", value: property.size_range ? `${property.size_range} sq ft` : "N/A" },
       { icon: Building2, label: "Type", value: property.type || "N/A" },
     ];
@@ -152,13 +174,30 @@ const PropertyDetail = ({ params }) => {
 
   const financialDetails = useMemo(() => {
     if (!property) return [];
+    
     return [
-      { icon: DollarSign, label: "Price Range", value: property.price_range ? `AED ${property.price_range}` : null },
-      { icon: TrendingUp, label: "ROI", value: property.roi ? `${property.roi}%` : null },
-      { icon: DollarSign, label: "Annual Rent", value: property.annual_rent ? `AED ${property.annual_rent.toLocaleString()}` : null },
-      { icon: TrendingUp, label: "Est. Yield", value: property.estimated_yield ? `${property.estimated_yield}%` : null },
+      { 
+        icon: DollarSign, 
+        label: "Price Range", 
+        value: formatPriceRange(property.price_range)
+      },
+      { 
+        icon: TrendingUp, 
+        label: "ROI", 
+        value: property.roi ? `${property.roi}%` : null 
+      },
+      { 
+        icon: DollarSign, 
+        label: "Annual Rent", 
+        value: property.annual_rent ? formatPrice(property.annual_rent) : null 
+      },
+      { 
+        icon: TrendingUp, 
+        label: "Est. Yield", 
+        value: property.estimated_yield ? `${property.estimated_yield}%` : null 
+      },
     ].filter(item => item.value);
-  }, [property]);
+  }, [property, formatPrice, formatPriceRange, currency]);
 
   const nearbyByCategory = useMemo(() => {
     if (!property?.nearbyPoints) return {};
@@ -277,22 +316,7 @@ const PropertyDetail = ({ params }) => {
   }, []);
 
   if (loading || !property) {
-    return (
-      <div className="min-h-screen bg-background ">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="aspect-video bg-muted rounded-lg animate-pulse" />
-              <CardSkeleton />
-              <CardSkeleton />
-            </div>
-            <div>
-              <CardSkeleton />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <PropertyDetailSkeleton />;
   }
 
   return (
@@ -309,12 +333,13 @@ const PropertyDetail = ({ params }) => {
               <ChevronRight className="h-4 w-4" />
               <span className="text-foreground truncate">{property.title}</span>
             </div>
-  {/* Image Gallery */}
-        <section className="bg-background py-6">
-          <Suspense fallback={<div className="aspect-video bg-muted animate-pulse " />}>
-            <PropertyGallery propertyImages={propertyImages} />
-          </Suspense>
-        </section>
+            
+            {/* Image Gallery */}
+            <section className="bg-background py-6">
+              <Suspense fallback={<div className="aspect-video bg-muted animate-pulse " />}>
+                <PropertyGallery propertyImages={propertyImages} />
+              </Suspense>
+            </section>
 
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
               <div className="flex-1 min-w-0">
@@ -335,14 +360,17 @@ const PropertyDetail = ({ params }) => {
                 </h1>
                 
                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4" />
-                    <span className="text-sm">{property.community}</span>
-                  </div>
-                  {property.handover && (
+                  {property.community && (
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-sm">{property.community}</span>
+                    </div>
+                  )}
+                  
+                  {property.estimated_yield && (
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-4 w-4" />
-                      <span className="text-sm">Handover: {property.handover}</span>
+                      <span className="text-sm">Estimated Yield: {property.estimated_yield}%</span>
                     </div>
                   )}
                 </div>
@@ -356,7 +384,7 @@ const PropertyDetail = ({ params }) => {
                 <div className="text-right bg-card border border-border rounded-lg p-4 min-w-50">
                   <p className="text-xs text-muted-foreground mb-1">Starting from</p>
                   <p className="text-3xl font-bold text-primary">
-                    AED {property.starting_price?.toLocaleString() || "N/A"}
+                    {formatPrice(property.starting_price)}
                   </p>
                 </div>
                 <QuickActions onShare={handleShare} onSave={handleSave} />
@@ -368,15 +396,13 @@ const PropertyDetail = ({ params }) => {
         {/* Compact Stats Bar */}
         <section className=" py-3 border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {keyStats.map((stat, index) => (
                 <StatCard key={index} {...stat} />
               ))}
             </div>
           </div>
         </section>
-
-      
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -411,7 +437,7 @@ const PropertyDetail = ({ params }) => {
                 </InfoSection>
               )}
 
-{/* Construction Updates */}
+              {/* Construction Updates */}
               {property.constructionUpdates?.length > 0 && (
                 <Card className="p-6">
                   <div className="flex items-center gap-2 mb-4">
@@ -442,7 +468,6 @@ const PropertyDetail = ({ params }) => {
                 </Card>
               )}
 
-
               {/* Floor Plans */}
               {property.floorPlans?.length > 0 && (
                 <Card className="p-6">
@@ -469,8 +494,7 @@ const PropertyDetail = ({ params }) => {
                 </Card>
               )}
 
-
- {/* Documents */}
+              {/* Documents */}
               {property.documents?.length > 0 && (
                 <Card className="p-6">
                   <h2 className="font-serif text-2xl font-bold text-primary mb-4">Documents & Brochures</h2>

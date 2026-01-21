@@ -3,6 +3,7 @@ import "./globals.css";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Toaster } from "sonner";
+import CurrencyInitializer from "@/components/CurrencyInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,11 +28,11 @@ export default function RootLayout({ children }) {
         
         {/* ADD THIS */}
         <Toaster richColors position="top-right" />
-
+  
         <div className="pt-20 bg-bg-dark">
           {children}
         </div>
-
+     <CurrencyInitializer/>
         <Footer />
       </body>
     </html>

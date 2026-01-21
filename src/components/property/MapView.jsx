@@ -220,10 +220,11 @@ const MapView = ({ properties = [] }) => {
   console.log(`Properties with coordinates: ${propertiesWithCoords.length}`, propertiesWithCoords);
 
   const allNearbyPoints = propertiesWithCoords.flatMap(property => {
+
     // Handle both property_nearby_points and nearby_points
     const nearbyPoints = property.property_nearby_points || property.nearby_points || [];
     
-    console.log(`Property ${property.title} has ${nearbyPoints.length} nearby points`, nearbyPoints);
+    // console.log(`Property ${property.title} has ${nearbyPoints.length} nearby points`, nearbyPoints);
     
     if (!nearbyPoints || nearbyPoints.length === 0) return [];
     
@@ -233,7 +234,7 @@ const MapView = ({ properties = [] }) => {
         const lat = point.lat || point.latitude ? parseFloat(point.lat || point.latitude) : null;
         const lng = point.long || point.lng || point.longitude ? parseFloat(point.long || point.lng || point.longitude) : null;
         
-        console.log(`Point ${point.name}: lat=${lat}, lng=${lng}`, point);
+        // console.log(`Point ${point.name}: lat=${lat}, lng=${lng}`, point);
         
         if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
           console.warn(`Invalid coordinates for point ${point.name}:`, { lat, lng, point });
@@ -257,7 +258,7 @@ const MapView = ({ properties = [] }) => {
       .filter(Boolean);
   });
   
-  console.log(`Total nearby points found: ${allNearbyPoints.length}`, allNearbyPoints);
+ 8 // console.log(`Total nearby points found: ${allNearbyPoints.length}`, allNearbyPoints);
 
   const formatPrice = (price) => {
     if (!price) return "POA";

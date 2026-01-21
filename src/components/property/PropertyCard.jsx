@@ -4,9 +4,12 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Bed, Bath, Square } from "lucide-react";
-import Carousel from "../ui/carousel"; // import your existing carousel
+import Carousel from "../ui/carousel";
+import { usePropertyStore } from '@/store/propertyStore';
 
-const PropertyCard = ({ property,viewMode='grid', }) => {
+const PropertyCard = ({ property, viewMode='grid' }) => {
+  const formatPrice = usePropertyStore(state => state.formatPrice);
+  
   if (!property) return null;
 
   const {
@@ -39,7 +42,7 @@ const PropertyCard = ({ property,viewMode='grid', }) => {
     <Link href={`/properties/${id}`}>
       <Card className="group overflow-hidden w-full hover:shadow-luxury transition-all duration-300 cursor-pointer flex flex-col h-full">
         {/* Image / Carousel */}
-        <div className={`relative overflow-hidden ${viewMode ==='grid'? 'aspect-4/3 h-45' : '' }  `}>
+        <div className={`relative overflow-hidden ${viewMode ==='grid'? 'aspect-4/3 h-45' : '' }`}>
           {images.length > 1 ? (
             <Carousel
               items={images}
@@ -78,8 +81,8 @@ const PropertyCard = ({ property,viewMode='grid', }) => {
               <h3 className="font-serif text-xl font-semibold text-foreground group-hover:text-accent transition-colors line-clamp-1">
                 {title}
               </h3>
-              <p className="font-bold text-accent text-lg">
-                {starting_price ? `AED ${Number(starting_price).toLocaleString()}` : "Price N/A"}
+              <p className="font-bold text-accent text-lg whitespace-nowrap">
+                {starting_price ? formatPrice(starting_price) : "Price N/A"}
               </p>
             </div>
 

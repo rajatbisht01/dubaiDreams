@@ -5,8 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { usePropertyStore } from '@/store/propertyStore';
 
 export default function HeroCarousel({ featuredProperties = [] }) {
+  const formatPrice = usePropertyStore(state => state.formatPrice);
+
   // Build slides: one per property, first image only
   const slides = useMemo(() => {
     if (!Array.isArray(featuredProperties) || featuredProperties.length === 0) {
@@ -25,14 +28,14 @@ export default function HeroCarousel({ featuredProperties = [] }) {
     return featuredProperties.map(property => ({
       image: property?.property_images?.[0]?.image_url || '/assets/placeholder.jpg',
       title: property.title ?? 'Untitled Property',
-      price: property.starting_price ? `AED ${property.starting_price.toLocaleString()}` : 'Price N/A',
+      price: property.starting_price ? formatPrice(property.starting_price) : 'Price N/A',
       developer: property.developers?.name ?? 'Unknown Developer',
       location: property.communities?.name ?? '',
       bedrooms: property.bedrooms ?? '-',
       bathrooms: property.bathrooms ?? '-',
       id: property.id ?? '_'
     }));
-  }, [featuredProperties]);
+  }, [featuredProperties, formatPrice]);
 
   const [[currentSlide, direction], setCurrentSlide] = useState([0, 0]);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -106,9 +109,6 @@ export default function HeroCarousel({ featuredProperties = [] }) {
         <p className="text-sm text-gray-300">{slide.developer}</p>
         <p className="text-lg font-semibold mt-2">{slide.price}</p>
         {slide.location && <p className="text-sm text-gray-200 mt-1">{slide.location}</p>}
-        {/* <p className="text-sm text-gray-200 mt-1">
-          {slide.bedrooms} Beds • {slide.bathrooms} Baths
-        </p> */}
       </div>
     </motion.div>
   </AnimatePresence>

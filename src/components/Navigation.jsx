@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
 import { Home, Building2, Phone, Info, Menu, X, User } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
+import CurrencyToggle from "./CurrencyToggle";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,7 +31,7 @@ const Navigation = () => {
 
   const isActive = (path) => pathname === path;
 
-  if (loading) return null; // optional UX optimization
+  if (loading) return null;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-md border-b border-gray-200 shadow-sm transition-all">
@@ -39,7 +40,7 @@ const Navigation = () => {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-           <img src="/assets/logo.png" alt="logo"  className="w-22 h-22"/>
+            <img src="/assets/logo.png" alt="logo" className="w-22 h-22"/>
           </Link>
 
           {/* Desktop Navigation */}
@@ -60,8 +61,9 @@ const Navigation = () => {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
+          {/* Desktop Actions - Currency + CTA */}
+          <div className="hidden md:flex items-center gap-3">
+            <CurrencyToggle />
             <Button
               asChild
               variant="accent"
@@ -99,7 +101,13 @@ const Navigation = () => {
               </Link>
             ))}
 
-            <div className="px-5 pt-4">
+            {/* Mobile Currency Toggle */}
+            <div className="px-5 py-3">
+              <CurrencyToggle />
+            </div>
+
+            {/* Mobile CTA */}
+            <div className="px-5 pt-2">
               <Button asChild className="w-full bg-primary text-white rounded-full">
                 <Link href="/properties" onClick={() => setIsOpen(false)}>
                   View Properties
