@@ -7,14 +7,14 @@ const SPRING_OPTIONS = { type: 'spring', stiffness: 300, damping: 30 };
 
 export default function Carousel({
   items = [],
-  baseWidth = 300,       // can be number (px) or string ('100%')
-  height = 260,          // height of carousel container
+  baseWidth = 300,
+  height = 260,
   autoplay = false,
   autoplayDelay = 3000,
   pauseOnHover = false,
   loop = false,
   round = false,
-  gap = 16               // spacing between items
+  gap = 16
 }) {
   const containerRef = useRef(null);
   const x = useMotionValue(0);
@@ -22,14 +22,14 @@ export default function Carousel({
   const [isHovered, setIsHovered] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  // Calculate item width based on baseWidth
   const itemWidth = typeof baseWidth === 'number' ? baseWidth : containerRef.current?.offsetWidth || 300;
   const trackItemOffset = itemWidth + gap;
 
-  // Prepare items for looping
-  const carouselItems = loop ? [...items, items[0]] : items;
+  // Prepare items with unique keys for looping
+  const carouselItems = loop 
+    ? [...items.map((item, idx) => ({ ...item, _key: `item-${idx}` })), { ...items[0], _key: 'item-loop-0' }]
+    : items.map((item, idx) => ({ ...item, _key: `item-${idx}` }));
 
-  // Pause autoplay on hover
   useEffect(() => {
     if (pauseOnHover && containerRef.current) {
       const handleMouseEnter = () => setIsHovered(true);
@@ -45,7 +45,6 @@ export default function Carousel({
     }
   }, [pauseOnHover]);
 
-  // Autoplay
   useEffect(() => {
     if (autoplay && (!pauseOnHover || !isHovered)) {
       const timer = setInterval(() => {
@@ -70,14 +69,11 @@ export default function Carousel({
     }
   };
 
-  // Calculate rotation for each item based on current position
   const getRotateY = (index) => {
     const currentX = -(currentIndex * trackItemOffset);
     const itemPosition = -(index * trackItemOffset);
     const distance = currentX - itemPosition;
     
-    // Calculate rotation based on distance from center
-    // Adjust these values to control rotation intensity
     const maxRotation = 90;
     const rotationRange = trackItemOffset;
     
@@ -106,34 +102,32 @@ export default function Carousel({
         transition={effectiveTransition}
         onAnimationComplete={handleAnimationComplete}
       >
-        {carouselItems.map((item, index) => {
-          return (
-            <motion.div
-              key={index}
-              className={`relative shrink-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing ${round ? 'rounded-none' : 'rounded-none'}`}
-              style={{
-                width: `100%`,
-                height: '100%',
-                rotateY: getRotateY(index),
-                borderRadius: round ? '50%' : '0px',
-              }}
-              transition={effectiveTransition}
-            >
-              {item.url ? (
-                <img
-                  src={item.url}
-                  alt={item.alt || ''}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="p-5 text-white">
-                  <div className="font-bold">{item.title}</div>
-                  <p>{item.description}</p>
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
+        {carouselItems.map((item, index) => (
+          <motion.div
+            key={item._key}
+            className={`relative shrink-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing ${round ? 'rounded-none' : 'rounded-none'}`}
+            style={{
+              width: `100%`,
+              height: '100%',
+              rotateY: getRotateY(index),
+              borderRadius: round ? '50%' : '0px',
+            }}
+            transition={effectiveTransition}
+          >
+            {item.url ? (
+              <img
+                src={item.url}
+                alt={item.alt || ''}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="p-5 text-white">
+                <div className="font-bold">{item.title}</div>
+                <p>{item.description}</p>
+              </div>
+            )}
+          </motion.div>
+        ))}
       </motion.div>
     </div>
   );
