@@ -337,18 +337,6 @@ async function uploadFile(file, fileType, userRole) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
-    // ===== ADD THIS DEBUG CODE =====
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    console.log("[uploadFile] Auth check:", {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      userEmail: session?.user?.email,
-      sessionError: sessionError
-    });
-
-    if (!session) {
-      throw new Error("Not authenticated - please log in again");
-    }
     // ===== END DEBUG CODE =====
 
     // Determine bucket
