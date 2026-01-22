@@ -11,6 +11,7 @@ import { Image as ImageIcon, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useUser } from "@/hooks/useUser";
+import { supabaseClient } from "@/lib/supabaseClient";
 
 const STORAGE_KEY = "property_form_draft";
 
@@ -329,13 +330,9 @@ async function uploadFile(file, fileType, userRole) {
       throw new Error("You must be an admin to upload files");
     }
 
-    // Import Supabase client
-    const { createClient } = await import('@supabase/supabase-js');
+   
     
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+    const supabase = supabaseClient();
 
     // ===== END DEBUG CODE =====
 
