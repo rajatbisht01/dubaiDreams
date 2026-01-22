@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Image as ImageIcon, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useUser } from "@/hooks/useUser";
 
 const STORAGE_KEY = "property_form_draft";
 
@@ -17,7 +18,8 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
   const isEdit = !!item?.id;
   const [loading, setLoading] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
-
+ const { profile, loading: userLoading } = useUser();
+  const userRole = profile?.role;
   const [lookups, setLookups] = useState({
     propertyTypes: [],
     developers: [],
@@ -310,98 +312,92 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     });
   }
 
-// In PropertyStepperForm.jsx
-// Replace uploadFile function with this authenticated client-side upload:
 
 
 
-async function uploadFile(file, fileType) {
-  console.log("[uploadFile] Starting authenticated upload:", {
-    fileName: file.name,
-    fileSize: file.size,
-    fileType: fileType,
-    mimeType: file.type
-  });
-
-  try {
-    // Import Supabase client
-    const { createClient } = await import('@supabase/supabase-js');
-    
-    // Create client with anon key - will use user's auth session automatically
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-
-    // Verify user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      throw new Error("You must be logged in to upload files");
-    }
-
-    console.log("[uploadFile] User authenticated:", user.id);
-
-    // Determine bucket based on file type
-    let bucket = "property-documents";
-    if (fileType === "image") {
-      bucket = "property-images";
-    }
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const sanitizedName = file.name
-      .replace(/[^a-zA-Z0-9.-]/g, '_')
-      .replace(/_{2,}/g, '_')
-      .toLowerCase();
-    const filename = `${timestamp}-${sanitizedName}`;
-
-    console.log(`[uploadFile] Uploading ${file.size} bytes to ${bucket}/${filename}...`);
-
-    // Upload directly from browser to Supabase Storage
-    // The RLS policy will verify the user is authenticated
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(filename, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type || 'application/octet-stream'
-      });
-
-    if (error) {
-      console.error("[uploadFile] Supabase upload error:", {
-        message: error.message,
-        statusCode: error.statusCode,
-        error: error
-      });
-      throw new Error(error.message || "Upload failed");
-    }
-
-    if (!data?.path) {
-      throw new Error("No path returned from upload");
-    }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-
-    console.log("[uploadFile] ✅ Upload successful:", publicUrl);
-    return publicUrl;
-
-  } catch (error) {
-    console.error("[uploadFile] ❌ Upload failed:", {
-      message: error.message,
+async function uploadFile(file, fileType, userRole) {
+    console.log("[uploadFile] Starting authenticated upload:", {
       fileName: file.name,
-      fileSize: file.size
+      fileSize: file.size,
+      fileType: fileType,
+      mimeType: file.type,
+      userRole: userRole
     });
-    throw error;
-  }
-}
 
-// REMOVE the other uploadFile function that has:
-// - const form = new FormData();
-// - fetch("/api/upload", ...)
-// That one should be completely deleted!
+    try {
+      // Check user role - FIX THE LOGIC
+      if (userRole !== "admin" && userRole !== "superAdmin") {
+        throw new Error("You must be an admin to upload files");
+      }
+
+      console.log("[uploadFile] User authenticated with role:", userRole);
+
+      // Import Supabase client
+      const { createClient } = await import('@supabase/supabase-js');
+      
+      // Create client with anon key
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      );
+
+      // Determine bucket based on file type
+      let bucket = "property-documents";
+      if (fileType === "image") {
+        bucket = "property-images";
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const sanitizedName = file.name
+        .replace(/[^a-zA-Z0-9.-]/g, '_')
+        .replace(/_{2,}/g, '_')
+        .toLowerCase();
+      const filename = `${timestamp}-${sanitizedName}`;
+
+      console.log(`[uploadFile] Uploading ${file.size} bytes to ${bucket}/${filename}...`);
+
+      // Upload directly from browser to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(filename, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type || 'application/octet-stream'
+        });
+
+      if (error) {
+        console.error("[uploadFile] Supabase upload error:", {
+          message: error.message,
+          statusCode: error.statusCode,
+          error: error
+        });
+        throw new Error(error.message || "Upload failed");
+      }
+
+      if (!data?.path) {
+        throw new Error("No path returned from upload");
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(data.path);
+
+      console.log("[uploadFile] ✅ Upload successful:", publicUrl);
+      return publicUrl;
+
+    } catch (error) {
+      console.error("[uploadFile] ❌ Upload failed:", {
+        message: error.message,
+        fileName: file.name,
+        fileSize: file.size
+      });
+      throw error;
+    }
+  }
+
+
 
 
 
@@ -433,6 +429,17 @@ async function uploadFile(file, fileType) {
 async function handleFinalSubmit() {
   setLoading(true);
   setError(null);
+if(userLoading) {
+  toast.error("User data is still loading. Please try again.");
+  setLoading(false);
+  return;
+}
+
+if(userRole !== "admin" && userRole !== "superAdmin") { 
+  toast.error("You do not have permission to perform this action.");
+  setLoading(false);
+  return;
+}
 
   const successMessage = isEdit ? "Property updated!" : "Property created!";
   
@@ -491,7 +498,7 @@ async function handleFinalSubmit() {
 
     if (!propertyId) throw new Error("No property ID returned");
 
-    // Step 2: Delete old files
+    // Step 2:
     try {
       await Promise.allSettled([
         deleteBatch(`/api/admin/properties/${propertyId}/images`, payload.imagesToDelete),
@@ -516,7 +523,7 @@ async function handleFinalSubmit() {
         imageUrls = await Promise.all(
           payload.imageFiles.map((f, idx) => {
             console.log(`[handleFinalSubmit] Uploading image ${idx + 1}/${payload.imageFiles.length}`);
-            return uploadFile(f, "image");
+            return uploadFile(f, "image", userRole);
           })
         );
         console.log("[handleFinalSubmit] All images uploaded successfully");
@@ -531,7 +538,7 @@ async function handleFinalSubmit() {
           console.log(`[handleFinalSubmit] Uploading document ${i + 1}/${payload.documentFiles.length}: ${d.file.name}`);
           
           try {
-            const url = await uploadFile(d.file, "document");
+            const url = await uploadFile(d.file, "document", userRole);
             documentData.push({
               url: url,
               title: d.title,
@@ -557,7 +564,7 @@ async function handleFinalSubmit() {
         console.log(`[handleFinalSubmit] Uploading ${payload.floorPlanFiles.length} floor plans...`);
         floorPlanData = await Promise.all(
           payload.floorPlanFiles.map(async (fp) => {
-            const url = await uploadFile(fp.file, "document");
+            const url = await uploadFile(fp.file, "document", userRole);
             return {
               url: url,
               title: fp.title,
