@@ -310,16 +310,94 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     });
   }
 
-  async function uploadFile(file, fileType) {
-    const form = new FormData();
-    form.append("file", file);
-    form.append("fileType", fileType);
+// In PropertyStepperForm.jsx
+// Replace uploadFile function with this authenticated client-side upload:
+
+async function uploadFile(file, fileType) {
+  console.log("[uploadFile] Starting authenticated upload:", {
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: fileType,
+    mimeType: file.type
+  });
+
+  try {
+    // Import Supabase client
+    const { createClient } = await import('@supabase/supabase-js');
     
-    const res = await fetch("/api/upload", { method: "POST", body: form });
-    if (!res.ok) throw new Error("Upload failed");
-    const d = await res.json();
-    return d.file;
+    // Create client with anon key - will use user's auth session automatically
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error("You must be logged in to upload files");
+    }
+
+    console.log("[uploadFile] User authenticated:", user.id);
+
+    // Determine bucket based on file type
+    let bucket = "property-documents";
+    if (fileType === "image") {
+      bucket = "property-images";
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const sanitizedName = file.name
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .replace(/_{2,}/g, '_')
+      .toLowerCase();
+    const filename = `${timestamp}-${sanitizedName}`;
+
+    console.log(`[uploadFile] Uploading ${file.size} bytes to ${bucket}/${filename}...`);
+
+    // Upload directly from browser to Supabase Storage
+    // The RLS policy will verify the user is authenticated
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filename, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'application/octet-stream'
+      });
+
+    if (error) {
+      console.error("[uploadFile] Supabase upload error:", {
+        message: error.message,
+        statusCode: error.statusCode,
+        error: error
+      });
+      throw new Error(error.message || "Upload failed");
+    }
+
+    if (!data?.path) {
+      throw new Error("No path returned from upload");
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    console.log("[uploadFile] ✅ Upload successful:", publicUrl);
+    return publicUrl;
+
+  } catch (error) {
+    console.error("[uploadFile] ❌ Upload failed:", {
+      message: error.message,
+      fileName: file.name,
+      fileSize: file.size
+    });
+    throw error;
   }
+}
+
+
+
 
   async function postBatch(url, dataArray) {
     if (!dataArray.length) return;
