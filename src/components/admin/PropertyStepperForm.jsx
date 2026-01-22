@@ -313,6 +313,8 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 // In PropertyStepperForm.jsx
 // Replace uploadFile function with this authenticated client-side upload:
 
+
+
 async function uploadFile(file, fileType) {
   console.log("[uploadFile] Starting authenticated upload:", {
     fileName: file.name,
@@ -396,6 +398,11 @@ async function uploadFile(file, fileType) {
   }
 }
 
+// REMOVE the other uploadFile function that has:
+// - const form = new FormData();
+// - fetch("/api/upload", ...)
+// That one should be completely deleted!
+
 
 
 
@@ -421,65 +428,7 @@ async function uploadFile(file, fileType) {
     );
   }
 
-// In PropertyStepperForm.jsx
-// Replace the uploadFile function with this version that logs the actual error:
 
-async function uploadFile(file, fileType) {
-  const form = new FormData();
-  form.append("file", file);
-  form.append("fileType", fileType);
-  
-  console.log("[uploadFile] Starting upload:", {
-    fileName: file.name,
-    fileSize: file.size,
-    fileType: fileType,
-    mimeType: file.type
-  });
-  
-  try {
-    const res = await fetch("/api/upload", { 
-      method: "POST", 
-      body: form 
-    });
-    
-    console.log("[uploadFile] Response status:", res.status);
-    
-    // Get response body regardless of status
-    const responseText = await res.text();
-    console.log("[uploadFile] Response body:", responseText);
-    
-    if (!res.ok) {
-      let errorData;
-      try {
-        errorData = JSON.parse(responseText);
-      } catch (e) {
-        errorData = { error: responseText || "Upload failed" };
-      }
-      
-      console.error("[uploadFile] Upload failed:", {
-        status: res.status,
-        statusText: res.statusText,
-        error: errorData,
-        headers: Object.fromEntries(res.headers.entries())
-      });
-      
-      throw new Error(errorData.error || `Upload failed with status ${res.status}`);
-    }
-    
-    const data = JSON.parse(responseText);
-    console.log("[uploadFile] Upload successful:", data.file);
-    return data.file;
-    
-  } catch (error) {
-    console.error("[uploadFile] Exception:", {
-      message: error.message,
-      stack: error.stack
-    });
-    throw error;
-  }
-}
-
-// Keep the rest of handleFinalSubmit as is, but add more detailed error handling:
 
 async function handleFinalSubmit() {
   setLoading(true);
