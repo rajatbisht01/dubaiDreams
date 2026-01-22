@@ -314,90 +314,90 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
 
 
-
 async function uploadFile(file, fileType, userRole) {
-    console.log("[uploadFile] Starting authenticated upload:", {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: fileType,
-      mimeType: file.type,
-      userRole: userRole
+  console.log("[uploadFile] Starting authenticated upload:", {
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: fileType,
+    mimeType: file.type,
+    userRole: userRole
+  });
+
+  try {
+    // Check user role
+    if (userRole !== "admin" && userRole !== "superAdmin") {
+      throw new Error("You must be an admin to upload files");
+    }
+
+    // Import Supabase client
+    const { createClient } = await import('@supabase/supabase-js');
+    
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    // ===== ADD THIS DEBUG CODE =====
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log("[uploadFile] Auth check:", {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email,
+      sessionError: sessionError
     });
 
-    try {
-      // Check user role - FIX THE LOGIC
-      if (userRole !== "admin" && userRole !== "superAdmin") {
-        throw new Error("You must be an admin to upload files");
-      }
-
-      console.log("[uploadFile] User authenticated with role:", userRole);
-
-      // Import Supabase client
-      const { createClient } = await import('@supabase/supabase-js');
-      
-      // Create client with anon key
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      );
-
-      // Determine bucket based on file type
-      let bucket = "property-documents";
-      if (fileType === "image") {
-        bucket = "property-images";
-      }
-
-      // Generate unique filename
-      const timestamp = Date.now();
-      const sanitizedName = file.name
-        .replace(/[^a-zA-Z0-9.-]/g, '_')
-        .replace(/_{2,}/g, '_')
-        .toLowerCase();
-      const filename = `${timestamp}-${sanitizedName}`;
-
-      console.log(`[uploadFile] Uploading ${file.size} bytes to ${bucket}/${filename}...`);
-
-      // Upload directly from browser to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(filename, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type || 'application/octet-stream'
-        });
-
-      if (error) {
-        console.error("[uploadFile] Supabase upload error:", {
-          message: error.message,
-          statusCode: error.statusCode,
-          error: error
-        });
-        throw new Error(error.message || "Upload failed");
-      }
-
-      if (!data?.path) {
-        throw new Error("No path returned from upload");
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
-
-      console.log("[uploadFile] ✅ Upload successful:", publicUrl);
-      return publicUrl;
-
-    } catch (error) {
-      console.error("[uploadFile] ❌ Upload failed:", {
-        message: error.message,
-        fileName: file.name,
-        fileSize: file.size
-      });
-      throw error;
+    if (!session) {
+      throw new Error("Not authenticated - please log in again");
     }
+    // ===== END DEBUG CODE =====
+
+    // Determine bucket
+    let bucket = "property-documents";
+    if (fileType === "image") {
+      bucket = "property-images";
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const sanitizedName = file.name
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .replace(/_{2,}/g, '_')
+      .toLowerCase();
+    const filename = `${timestamp}-${sanitizedName}`;
+
+    console.log(`[uploadFile] Uploading to ${bucket}/${filename}...`);
+
+    // Upload
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filename, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'application/octet-stream'
+      });
+
+    if (error) {
+      console.error("[uploadFile] Supabase upload error:", error);
+      throw new Error(error.message || "Upload failed");
+    }
+
+    if (!data?.path) {
+      throw new Error("No path returned from upload");
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    console.log("[uploadFile] ✅ Upload successful:", publicUrl);
+    return publicUrl;
+
+  } catch (error) {
+    console.error("[uploadFile] ❌ Upload failed:", error);
+    throw error;
   }
-
-
+}
 
 
 
