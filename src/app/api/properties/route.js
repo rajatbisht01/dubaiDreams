@@ -1,3 +1,4 @@
+// API Route: GET /api/properties
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
@@ -40,25 +41,27 @@ export async function GET(request) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    /* ---------------------- Select Graph ---------------------- */
+    /* ---------------------- Select Graph - FIXED ---------------------- */
     const selectQuery = `
       id, title, slug, description, starting_price, created_at, latitude, longitude, isFeatured,
-      bedrooms, bathrooms, size_range, price_range, handover, roi,
+      bedrooms, bathrooms, size_range, price_range, handover, roi, estimated_yield,
       developers:developer_id(id, name, logo_url),
       communities:community_id(id, name),
       property_types:property_type_id(id, name),
       property_status_types:status_id(id, name),
       property_images!inner(id, image_url, is_featured, sort_order),
-      property_amenities!left(amenity_id),
+      property_amenities!left(amenity_id, amenities(id, name)),
+      property_features!left(feature_id, features(id, name)),
+      property_views!left(view_type_id, view_types(id, name)),
       nearby_points:property_nearby_points(
-    id,
-    name,
-    lat,
-    long,
-    distance_in_km,
-    distance_in_minutes,
-    nearby_categories:category_id(id, name)
-  )
+        id,
+        name,
+        lat,
+        long,
+        distance_in_km,
+        distance_in_minutes,
+        nearby_categories:category_id(id, name)
+      )
     `;
 
     /* ---------------------- Base Query ---------------------- */
@@ -116,14 +119,6 @@ export async function GET(request) {
       query = query.eq("isFeatured", true);
     }
 
-    /* ---------------------- Amenities Filter ---------------------- */
-    // If amenities are selected, we need to filter properties that have ALL selected amenities
-    if (amenitiesArray.length > 0) {
-      // This approach checks if property has all selected amenities
-      // We'll fetch and filter in-memory for complex AND logic
-      // Note: For better performance, consider using a stored procedure or aggregate function
-    }
-
     /* ---------------------- Sorting & Pagination ---------------------- */
     
     // Apply sorting
@@ -145,16 +140,41 @@ export async function GET(request) {
       throw error;
     }
 
-    // Transform data to ensure featured image is first
+    // Transform data to ensure featured image is first AND normalize relationships
     let transformedData = (data || []).map(property => {
+      // Sort images: featured first, then by sort_order
       if (property.property_images && property.property_images.length > 0) {
-        // Sort images: featured first, then by sort_order
         property.property_images.sort((a, b) => {
           if (a.is_featured && !b.is_featured) return -1;
           if (!a.is_featured && b.is_featured) return 1;
           return (a.sort_order || 0) - (b.sort_order || 0);
         });
       }
+
+      // Transform amenities to include nested amenities object
+      if (property.property_amenities) {
+        property.property_amenities = property.property_amenities.map(pa => ({
+          amenity_id: pa.amenity_id,
+          amenities: pa.amenities // This already has { id, name }
+        }));
+      }
+
+      // Transform features to include nested features object
+      if (property.property_features) {
+        property.property_features = property.property_features.map(pf => ({
+          feature_id: pf.feature_id,
+          features: pf.features // This already has { id, name }
+        }));
+      }
+
+      // Transform views to include nested view_types object
+      if (property.property_views) {
+        property.property_views = property.property_views.map(pv => ({
+          view_type_id: pv.view_type_id,
+          view_types: pv.view_types // This already has { id, name }
+        }));
+      }
+
       return property;
     });
 

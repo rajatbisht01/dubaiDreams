@@ -1,22 +1,26 @@
 "use client";
 
-// Loading skeleton components
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { usePropertyStore } from "@/store/propertyStore";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { 
+  MapPin, Bed, Square, Building2, Calendar, TrendingUp, 
+  DollarSign, FileText, CheckCircle2, Navigation,
+  Download, Hammer, ChevronRight, Star, Eye, Award, Share2
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+
 const PropertyDetailSkeleton = () => (
   <div className="min-h-screen bg-background">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Image skeleton */}
           <div className="aspect-video bg-muted rounded-lg animate-pulse" />
-          {/* Content skeletons */}
-          <Card className="p-6 animate-pulse">
-            <div className="h-6 bg-muted rounded w-1/3 mb-4" />
-            <div className="space-y-3">
-              <div className="h-4 bg-muted rounded w-full" />
-              <div className="h-4 bg-muted rounded w-5/6" />
-              <div className="h-4 bg-muted rounded w-4/6" />
-            </div>
-          </Card>
           <Card className="p-6 animate-pulse">
             <div className="h-6 bg-muted rounded w-1/3 mb-4" />
             <div className="space-y-3">
@@ -25,15 +29,12 @@ const PropertyDetailSkeleton = () => (
             </div>
           </Card>
         </div>
-        {/* Sidebar skeleton */}
         <div>
           <Card className="p-6 animate-pulse">
             <div className="h-6 bg-muted rounded w-2/3 mb-4" />
             <div className="space-y-3">
               <div className="h-10 bg-muted rounded" />
               <div className="h-10 bg-muted rounded" />
-              <div className="h-10 bg-muted rounded" />
-              <div className="h-20 bg-muted rounded" />
               <div className="h-12 bg-muted rounded" />
             </div>
           </Card>
@@ -43,73 +44,8 @@ const PropertyDetailSkeleton = () => (
   </div>
 );
 
-import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
-import { usePropertyStore } from "@/store/propertyStore";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { 
-  MapPin, Bed, Bath, Square, Building2, Calendar, TrendingUp, 
-  DollarSign, FileText, Navigation, Clock, Award, CheckCircle2, 
-  Download, Hammer, ChevronRight, Phone, Mail, MessageSquare,
-  Eye, Share2, Heart
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { use } from "react";
-import { toast } from "sonner";
-import PropertyGallery from "@/components/property/PropertyGallery";
-import AnimatedPropertyGrid from "@/components/AnimatedPropertyGrid";
-
-// Optimized helper functions
-const flattenPropertyData = (data) => {
-  return {
-    ...data,
-    developer: data.developers?.name || "",
-    developerLogo: data.developers?.logo_url || null,
-    community: data.communities?.name || "",
-    type: data.property_types?.name || "",
-    status: data.property_status_types?.name || "",
-    amenities: data.property_amenities?.map(item => item.amenities?.name).filter(Boolean) || [],
-    features: data.property_features?.map(item => item.features?.name).filter(Boolean) || [],
-    views: data.property_views?.map(item => item.view_types?.name).filter(Boolean) || [],
-    documents: data.property_documents || [],
-    nearbyPoints: data.property_nearby_points || [],
-    floorPlans: data.floor_plans || [],
-    paymentPlans: data.payment_plans || [],
-    media: data.property_media || [],
-    constructionUpdates: data.construction_updates || [],
-  };
-};
-
-const calculateSimilarityScore = (p, currentProperty) => {
-  let score = 0;
-  if (p.property_type_id === currentProperty.property_type_id) score += 5;
-  if (p.community_id === currentProperty.community_id) score += 4;
-  if (p.starting_price && currentProperty.starting_price) {
-    const priceDiff = Math.abs(p.starting_price - currentProperty.starting_price);
-    const priceRange = currentProperty.starting_price * 0.3;
-    if (priceDiff <= priceRange) score += 3;
-  }
-  if (p.developer_id === currentProperty.developer_id) score += 2;
-  if (p.bedrooms === currentProperty.bedrooms) score += 1;
-  return score;
-};
-
-// Quick Action Bar Component
-const QuickActions = ({ onShare, onSave }) => (
-  <div className="flex items-center gap-2">
-    <Button variant="outline" size="sm" onClick={onShare} className="gap-2">
-      <Share2 className="h-4 w-4" />
-      Share
-    </Button>
-  </div>
-);
-
-// Compact Stat Card
 const StatCard = ({ icon: Icon, label, value }) => (
-  <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border hover:border-accent transition-colors">
+  <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border">
     <div className="p-2 bg-accent/10 rounded-lg">
       <Icon className="h-5 w-5 text-accent" />
     </div>
@@ -120,9 +56,8 @@ const StatCard = ({ icon: Icon, label, value }) => (
   </div>
 );
 
-// Compact Info Section
 const InfoSection = ({ title, icon: Icon, children }) => (
-  <Card className="p-5 hover:shadow-md transition-shadow">
+  <Card className="p-5">
     <div className="flex items-center gap-2 mb-4">
       <Icon className="h-5 w-5 text-accent" />
       <h3 className="font-semibold text-lg text-primary">{title}</h3>
@@ -131,44 +66,177 @@ const InfoSection = ({ title, icon: Icon, children }) => (
   </Card>
 );
 
+const QuickActions = ({ onShare }) => (
+  <div className="flex items-center gap-2">
+    <Button variant="outline" size="sm" onClick={onShare} className="gap-2">
+      <Share2 className="h-4 w-4" />
+      Share
+    </Button>
+  </div>
+);
+
+// Image Gallery Component
+const PropertyGallery = ({ images }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (!images || images.length === 0) {
+    return <div className="aspect-video bg-muted rounded-lg" />;
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Main Image */}
+      <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+        <img 
+          src={images[currentIndex].url} 
+          alt={images[currentIndex].alt}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      
+      {/* Thumbnails */}
+      {images.length > 1 && (
+        <div className="grid grid-cols-6 gap-2">
+          {images.map((img, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`aspect-video rounded-lg overflow-hidden border-2 transition-all ${
+                idx === currentIndex ? 'border-primary' : 'border-transparent'
+              }`}
+            >
+              <img 
+                src={img.url} 
+                alt={img.alt}
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PropertyDetail = ({ params }) => {
+  const properties = usePropertyStore(state => state.properties) || [];
   const fetchPropertyById = usePropertyStore(state => state.fetchPropertyById);
-  const fetchProperties = usePropertyStore(state => state.fetchProperties);
-  const loading = usePropertyStore(state => state.loading);
-  const currency = usePropertyStore(state => state.currency);
+  const currency = usePropertyStore(state => state.currency); // Add currency to trigger re-render
   const formatPrice = usePropertyStore(state => state.formatPrice);
   const formatPriceRange = usePropertyStore(state => state.formatPriceRange);
   
   const [property, setProperty] = useState(null);
-  const [similarProperties, setSimilarProperties] = useState([]);
+  const [additionalData, setAdditionalData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    message: '',
+    name: '', phone: '', email: '', message: '',
   });
 
-  const resolvedParams = use(params);
+  // Unwrap params with React.use()
+  const resolvedParams = React.use(params);
   const { id } = resolvedParams;
 
-  // Memoized computed values
+  // Load property - check store first, then fetch if needed
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProperty = async () => {
+      // First, try to find in store (from property list)
+      const cached = properties.find(p => p.id === id);
+      
+      if (cached) {
+        console.log("✅ Using cached property from store");
+        if (isMounted) {
+          setProperty(cached);
+          setLoading(false);
+        }
+      } else {
+        console.log("📡 Property not in store, fetching...");
+        // If not in store, fetch it
+        try {
+          const data = await fetchPropertyById(id);
+          if (data && isMounted) {
+            setProperty(data);
+          }
+        } catch (error) {
+          console.error("Error fetching property:", error);
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+        }
+      }
+    };
+
+    loadProperty();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]); // Only depend on id
+
+  // Fetch only additional data (documents, floor plans, construction updates)
+  useEffect(() => {
+    if (!property) return;
+
+    let isMounted = true;
+
+    const fetchAdditionalData = async () => {
+      try {
+        console.log("📄 Fetching additional details...");
+        const res = await fetch(`/api/properties/${id}/details`);
+        if (res.ok && isMounted) {
+          const data = await res.json();
+          console.log("✅ Additional details loaded:", data);
+          setAdditionalData(data);
+        }
+      } catch (error) {
+        console.error("Error fetching additional data:", error);
+      }
+    };
+
+    // Only fetch if we don't have this data already
+    const needsAdditionalData = 
+      !property.property_documents?.length || 
+      !property.floor_plans?.length || 
+      !property.construction_updates?.length;
+      
+    if (needsAdditionalData) {
+      fetchAdditionalData();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [property?.id]); // Only depend on property.id
+
   const propertyImages = useMemo(() => {
     if (!property?.property_images?.length) {
       return [{ url: "/assets/property-placeholder.jpg", alt: "Loading..." }];
     }
-    return property.property_images.map((img, index) => ({
+    return property.property_images.map((img) => ({
       url: img.image_url,
-      alt: property.title || `Property image ${index + 1}`,
+      alt: property.title,
     }));
   }, [property?.property_images, property?.title]);
 
   const keyStats = useMemo(() => {
     if (!property) return [];
+    
+    const formatBedrooms = (beds) => {
+      if (!beds) return "N/A";
+      const bedsStr = beds.toString().trim();
+      if (bedsStr.includes(',') || bedsStr.includes('&')) {
+        return bedsStr.replace(/\s/g, '').replace(/,/g, '-').replace(/&/g, '-');
+      }
+      return bedsStr;
+    };
+
     return [
-      { icon: Bed, label: "Bedrooms", value: property.bedrooms || "N/A" },
+      { icon: Bed, label: "Bedrooms", value: formatBedrooms(property.bedrooms) },
       { icon: Square, label: "Size", value: property.size_range ? `${property.size_range} sq ft` : "N/A" },
-      { icon: Building2, label: "Type", value: property.type || "N/A" },
+      { icon: Building2, label: "Type", value: property.property_types?.name || "N/A" },
     ];
   }, [property]);
 
@@ -179,7 +247,7 @@ const PropertyDetail = ({ params }) => {
       { 
         icon: DollarSign, 
         label: "Price Range", 
-        value: formatPriceRange(property.price_range)
+        value: property.price_range ? formatPriceRange(property.price_range) : null
       },
       { 
         icon: TrendingUp, 
@@ -187,83 +255,27 @@ const PropertyDetail = ({ params }) => {
         value: property.roi ? `${property.roi}%` : null 
       },
       { 
-        icon: DollarSign, 
-        label: "Annual Rent", 
-        value: property.annual_rent ? formatPrice(property.annual_rent) : null 
-      },
-      { 
         icon: TrendingUp, 
         label: "Est. Yield", 
         value: property.estimated_yield ? `${property.estimated_yield}%` : null 
       },
     ].filter(item => item.value);
-  }, [property, formatPrice, formatPriceRange, currency]);
+  }, [property, formatPriceRange, currency]); // Add currency dependency
 
   const nearbyByCategory = useMemo(() => {
-    if (!property?.nearbyPoints) return {};
-    return property.nearbyPoints.reduce((acc, point) => {
+    if (!property?.property_nearby_points) return {};
+    return property.property_nearby_points.reduce((acc, point) => {
       const category = point.nearby_categories?.name || "Other";
       if (!acc[category]) acc[category] = [];
       acc[category].push(point);
       return acc;
     }, {});
-  }, [property?.nearbyPoints]);
+  }, [property?.property_nearby_points]);
 
-  const hasHighlights = useMemo(() => {
-    return property?.property_amenities?.length > 0 || 
-           property?.property_features?.length > 0 || 
-           property?.property_views?.length > 0;
-  }, [property]);
-
-  // Load property data
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadProperty = async () => {
-      const data = await fetchPropertyById(id);
-      if (!isMounted) return;
-      
-      if (data) {
-        const flatProperty = flattenPropertyData(data);
-        setProperty(flatProperty);
-      }
-    };
-    
-    loadProperty();
-    return () => { isMounted = false; };
-  }, [id, fetchPropertyById]);
-
-  // Load similar properties separately
-  useEffect(() => {
-    if (!property) return;
-    
-    let isMounted = true;
-    const loadSimilar = async () => {
-      try {
-        const allProperties = await fetchProperties();
-        if (!isMounted || !allProperties?.length) return;
-
-        const scored = allProperties
-          .filter(p => p.id !== property.id)
-          .map(p => ({ property: p, score: calculateSimilarityScore(p, property) }))
-          .filter(item => item.score > 0)
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 4)
-          .map(item => item.property);
-
-        setSimilarProperties(scored);
-      } catch (error) {
-        console.error("Error loading similar properties:", error);
-      }
-    };
-
-    loadSimilar();
-    return () => { isMounted = false; };
-  }, [property, fetchProperties]);
-
-  const handleInputChange = useCallback((field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  }, []);
+  // Memoize formatted price so it updates with currency changes
+  const formattedStartingPrice = useMemo(() => {
+    return formatPrice(property?.starting_price);
+  }, [property?.starting_price, formatPrice, currency]);
 
   const handleSubmit = useCallback(async () => {
     if (!formData.name || !formData.email || !formData.phone) {
@@ -285,14 +297,12 @@ const PropertyDetail = ({ params }) => {
         })
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
+      if (!res.ok) throw new Error("Failed");
 
-      toast.success("Message sent successfully! We'll contact you soon.");
+      toast.success("Message sent successfully!");
       setFormData({ name: '', phone: '', email: '', message: '' });
     } catch (err) {
-      console.error("Submit error:", err.message);
-      toast.error("Failed to send message. Please try again.");
+      toast.error("Failed to send message.");
     } finally {
       setIsSubmitting(false);
     }
@@ -311,19 +321,20 @@ const PropertyDetail = ({ params }) => {
     }
   }, [property?.title]);
 
-  const handleSave = useCallback(() => {
-    toast.success("Property saved to your favorites!");
-  }, []);
-
   if (loading || !property) {
     return <PropertyDetailSkeleton />;
   }
 
+  // Merge additional data with property data
+  const documents = additionalData?.property_documents || property.property_documents || [];
+  const floorPlans = additionalData?.floor_plans || property.floor_plans || [];
+  const constructionUpdates = additionalData?.construction_updates || property.construction_updates || [];
+console.log("property details page render: ",property);
   return (
     <div className="min-h-screen bg-background">
-      <main className="">
-        {/* Compact Hero Section */}
-        <section className="bg-linear-to-br from-primary/5 via-accent/5 to-background border-b border-border">
+      <main>
+        {/* Hero Section */}
+        <section className="bg-gradient-to-br from-primary/5 via-accent/5 to-background border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
@@ -335,66 +346,61 @@ const PropertyDetail = ({ params }) => {
             </div>
             
             {/* Image Gallery */}
-            <section className="bg-background py-6">
-              <Suspense fallback={<div className="aspect-video bg-muted animate-pulse " />}>
-                <PropertyGallery propertyImages={propertyImages} />
-              </Suspense>
-            </section>
+            <PropertyGallery images={propertyImages} />
 
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mt-6">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   {property.isFeatured && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
-                      <Award className="h-3 w-3" />
+                      <Star className="h-3 w-3" />
                       FEATURED
                     </span>
                   )}
                   <span className="inline-flex items-center px-2.5 py-1 bg-accent/20 text-accent text-xs font-semibold rounded-full">
-                    {property.status}
+                    {property.property_status_types?.name || "Off-Plan"}
                   </span>
                 </div>
                 
-                <h1 className="font-serif text-3xl md:text-4xl font-bold text-primary mb-2 leading-tight">
+                <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2 leading-tight">
                   {property.title}
                 </h1>
                 
                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-3">
-                  {property.community && (
+                  {property.communities?.name && (
                     <div className="flex items-center gap-1.5">
                       <MapPin className="h-4 w-4" />
-                      <span className="text-sm">{property.community}</span>
+                      <span className="text-sm">{property.communities.name}</span>
                     </div>
                   )}
-                  
                   {property.estimated_yield && (
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4" />
-                      <span className="text-sm">Estimated Yield: {property.estimated_yield}%</span>
+                      <TrendingUp className="h-4 w-4" />
+                      <span className="text-sm">Est. Yield: {property.estimated_yield}%</span>
                     </div>
                   )}
                 </div>
 
-                {property.developerLogo && (
-                  <img src={property.developerLogo} alt={property.developer} className="h-8 opacity-80" />
+                {property.developers?.logo_url && (
+                  <img src={property.developers.logo_url} alt={property.developers.name} className="h-8 opacity-80" />
                 )}
               </div>
 
               <div className="flex flex-col items-end gap-3">
-                <div className="text-right bg-card border border-border rounded-lg p-4 min-w-50">
+                <div className="text-right bg-card border border-border rounded-lg p-4">
                   <p className="text-xs text-muted-foreground mb-1">Starting from</p>
                   <p className="text-3xl font-bold text-primary">
-                    {formatPrice(property.starting_price)}
+                    {formattedStartingPrice}
                   </p>
                 </div>
-                <QuickActions onShare={handleShare} onSave={handleSave} />
+                <QuickActions onShare={handleShare} />
               </div>
             </div>
           </div>
         </section>
 
-        {/* Compact Stats Bar */}
-        <section className=" py-3 border-b border-border">
+        {/* Stats Bar */}
+        <section className="py-3 border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {keyStats.map((stat, index) => (
@@ -438,42 +444,33 @@ const PropertyDetail = ({ params }) => {
               )}
 
               {/* Construction Updates */}
-              {property.constructionUpdates?.length > 0 && (
-                <Card className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Hammer className="h-6 w-6 text-accent" />
-                    <h2 className="font-serif text-2xl font-bold text-primary">Construction Progress</h2>
-                  </div>
+              {constructionUpdates.length > 0 && (
+                <InfoSection title="Construction Progress" icon={Hammer}>
                   <div className="space-y-4">
-                    {property.constructionUpdates.map((update) => (
+                    {constructionUpdates.map((update) => (
                       <div key={update.id} className="border-l-4 border-accent pl-4 py-2">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-muted-foreground">
-                            {update.update_date ? new Date(update.update_date).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            }) : 'Date not specified'}
+                            {new Date(update.update_date).toLocaleDateString()}
                           </span>
-                          {update.progress_percent !== null && (
+                          {update.progress_percent && (
                             <span className="text-sm font-semibold text-accent">
                               {update.progress_percent}% Complete
                             </span>
                           )}
                         </div>
-                        <p className="text-muted-foreground">{update.update_text}</p>
+                        <p className="text-muted-foreground text-sm">{update.update_text}</p>
                       </div>
                     ))}
                   </div>
-                </Card>
+                </InfoSection>
               )}
 
               {/* Floor Plans */}
-              {property.floorPlans?.length > 0 && (
-                <Card className="p-6">
-                  <h2 className="font-serif text-2xl font-bold text-primary mb-4">Floor Plans</h2>
+              {floorPlans.length > 0 && (
+                <InfoSection title="Floor Plans" icon={FileText}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {property.floorPlans.map((plan) => (
+                    {floorPlans.map((plan) => (
                       <a
                         key={plan.id}
                         href={plan.pdf_url}
@@ -481,25 +478,19 @@ const PropertyDetail = ({ params }) => {
                         rel="noreferrer"
                         className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors group"
                       >
-                        <div className="p-2 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors">
-                          <FileText className="h-5 w-5 text-accent" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-foreground">{plan.size} sqft</p>
-                        </div>
-                        <Download className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
+                        <Download className="h-5 w-5 text-accent" />
+                        <span className="font-medium text-sm">{plan.title}</span>
                       </a>
                     ))}
                   </div>
-                </Card>
+                </InfoSection>
               )}
 
               {/* Documents */}
-              {property.documents?.length > 0 && (
-                <Card className="p-6">
-                  <h2 className="font-serif text-2xl font-bold text-primary mb-4">Documents & Brochures</h2>
+              {documents.length > 0 && (
+                <InfoSection title="Documents" icon={FileText}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {property.documents.map((doc) => (
+                    {documents.map((doc) => (
                       <a
                         key={doc.id}
                         href={doc.file_url}
@@ -507,32 +498,22 @@ const PropertyDetail = ({ params }) => {
                         rel="noreferrer"
                         className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors group"
                       >
-                        <div className="p-2 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors">
-                          <Download className="h-5 w-5 text-accent" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-foreground">{doc.document_types?.name || 'Document'}</p>
-                        </div>
+                        <Download className="h-5 w-5 text-accent" />
+                        <span className="font-medium text-sm">{doc.title || doc.document_types?.name || 'Document'}</span>
                       </a>
                     ))}
                   </div>
-                </Card>
+                </InfoSection>
               )}
 
-              {/* Highlights Tabs */}
-              {hasHighlights && (
+              {/* Property Highlights */}
+              {(property.property_amenities?.length > 0 || property.property_features?.length > 0 || property.property_views?.length > 0) && (
                 <InfoSection title="Property Highlights" icon={CheckCircle2}>
-                  <Tabs defaultValue="amenities" className="w-full">
+                  <Tabs defaultValue={property.property_amenities?.length > 0 ? "amenities" : property.property_features?.length > 0 ? "features" : "views"}>
                     <TabsList className="grid w-full grid-cols-3">
-                      {property.property_amenities?.length > 0 && (
-                        <TabsTrigger value="amenities">Amenities</TabsTrigger>
-                      )}
-                      {property.property_features?.length > 0 && (
-                        <TabsTrigger value="features">Features</TabsTrigger>
-                      )}
-                      {property.property_views?.length > 0 && (
-                        <TabsTrigger value="views">Views</TabsTrigger>
-                      )}
+                      {property.property_amenities?.length > 0 && <TabsTrigger value="amenities">Amenities</TabsTrigger>}
+                      {property.property_features?.length > 0 && <TabsTrigger value="features">Features</TabsTrigger>}
+                      {property.property_views?.length > 0 && <TabsTrigger value="views">Views</TabsTrigger>}
                     </TabsList>
                     
                     {property.property_amenities?.length > 0 && (
@@ -540,7 +521,7 @@ const PropertyDetail = ({ params }) => {
                         <div className="grid grid-cols-2 gap-2">
                           {property.property_amenities.map((amenity, i) => (
                             <div key={i} className="flex items-center gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
+                              <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
                               <span className="text-muted-foreground">{amenity.amenities?.name}</span>
                             </div>
                           ))}
@@ -553,7 +534,7 @@ const PropertyDetail = ({ params }) => {
                         <div className="grid grid-cols-2 gap-2">
                           {property.property_features.map((feature, i) => (
                             <div key={i} className="flex items-center gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
+                              <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
                               <span className="text-muted-foreground">{feature.features?.name}</span>
                             </div>
                           ))}
@@ -566,7 +547,7 @@ const PropertyDetail = ({ params }) => {
                         <div className="grid grid-cols-2 gap-2">
                           {property.property_views.map((view, i) => (
                             <div key={i} className="flex items-center gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
+                              <Eye className="h-4 w-4 text-accent flex-shrink-0" />
                               <span className="text-muted-foreground">{view.view_types?.name}</span>
                             </div>
                           ))}
@@ -577,7 +558,7 @@ const PropertyDetail = ({ params }) => {
                 </InfoSection>
               )}
 
-              {/* Nearby Locations - Compact */}
+              {/* Nearby Locations */}
               {Object.keys(nearbyByCategory).length > 0 && (
                 <InfoSection title="Nearby Locations" icon={Navigation}>
                   <div className="space-y-3">
@@ -588,11 +569,9 @@ const PropertyDetail = ({ params }) => {
                           {points.slice(0, 3).map((point) => (
                             <div key={point.id} className="flex items-center justify-between text-sm py-1">
                               <span className="text-muted-foreground">{point.name}</span>
-                              <div className="flex items-center gap-2">
-                                {point.distance_in_km && (
-                                  <span className="text-xs font-medium">{point.distance_in_km} km</span>
-                                )}
-                              </div>
+                              {point.distance_in_km && (
+                                <span className="text-xs font-medium">{point.distance_in_km} km</span>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -603,10 +582,9 @@ const PropertyDetail = ({ params }) => {
               )}
             </div>
 
-            {/* Sticky Sidebar */}
+            {/* Sidebar */}
             <div className="space-y-6">
-              {/* Contact Form */}
-              <Card className="p-5 ">
+              <Card className="p-5 sticky top-4">
                 <h3 className="font-semibold text-lg text-primary mb-4">Get in Touch</h3>
                 <div className="space-y-3">
                   <div>
@@ -615,8 +593,8 @@ const PropertyDetail = ({ params }) => {
                       id="name" 
                       placeholder="John Doe" 
                       value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="mt-1" 
+                      onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                      className="mt-1"
                     />
                   </div>
                   <div>
@@ -626,8 +604,8 @@ const PropertyDetail = ({ params }) => {
                       type="tel" 
                       placeholder="+971 XX XXX XXXX"
                       value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className="mt-1" 
+                      onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+                      className="mt-1"
                     />
                   </div>
                   <div>
@@ -637,8 +615,8 @@ const PropertyDetail = ({ params }) => {
                       type="email" 
                       placeholder="john@example.com"
                       value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="mt-1" 
+                      onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                      className="mt-1"
                     />
                   </div>
                   <div>
@@ -648,16 +626,15 @@ const PropertyDetail = ({ params }) => {
                       placeholder="I'm interested in..." 
                       rows={3}
                       value={formData.message}
-                      onChange={(e) => handleInputChange('message', e.target.value)}
-                      className="mt-1" 
+                      onChange={(e) => setFormData(prev => ({...prev, message: e.target.value}))}
+                      className="mt-1"
                     />
                   </div>
                   
                   <Button 
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="w-full bg-primary hover:bg-primary-light mt-2" 
-                    size="lg"
+                    className="w-full bg-primary hover:bg-primary-hover mt-2"
                   >
                     {isSubmitting ? "Sending..." : "Request Information"}
                   </Button>
@@ -667,31 +644,18 @@ const PropertyDetail = ({ params }) => {
                 </div>
               </Card>
 
-              {/* Developer Card */}
-              <Card className="p-5 ">
-                <h4 className="font-medium text-sm mb-3">Developer</h4>
-                {property.developerLogo && (
-                  <img src={property.developerLogo} alt={property.developer} className="h-10 mb-2" />
-                )}
-                <p className="font-medium text-primary">{property.developer}</p>
-              </Card>
+              {property.developers && (
+                <Card className="p-5">
+                  <h4 className="font-medium text-sm mb-3">Developer</h4>
+                  {property.developers.logo_url && (
+                    <img src={property.developers.logo_url} alt={property.developers.name} className="h-10 mb-2" />
+                  )}
+                  <p className="font-medium text-primary">{property.developers.name}</p>
+                </Card>
+              )}
             </div>
           </div>
         </div>
-
-        {/* Similar Properties */}
-        {similarProperties.length > 0 && (
-          <section className="bg-muted/20 py-12 border-t border-border">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="font-serif text-2xl md:text-3xl font-bold text-primary mb-6">
-                Similar Properties
-              </h2>
-              <Suspense fallback={<div>Loading...</div>}>
-                <AnimatedPropertyGrid properties={similarProperties} viewMode="grid" />
-              </Suspense>
-            </div>
-          </section>
-        )}
       </main>
     </div>
   );

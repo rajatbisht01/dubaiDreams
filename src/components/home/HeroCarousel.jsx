@@ -10,6 +10,7 @@ import { usePropertyStore } from '@/store/propertyStore';
 export default function HeroCarousel({ featuredProperties = [] }) {
   const formatPrice = usePropertyStore(state => state.formatPrice);
   const currency = usePropertyStore(state => state.currency);
+  console.log(" featured property in hero carousel: ",featuredProperties);
 
   // Build slides: one per property, first image only
   // Add currency as dependency so slides rebuild when currency changes

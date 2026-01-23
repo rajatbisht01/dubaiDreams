@@ -6,6 +6,7 @@ const AED_TO_USD = 0.27; // 1 AED = 0.27 USD
 export const usePropertyStore = create((set, get) => ({
   /* ---------------------- STATE ---------------------- */
   selectedProperty: null,
+  properties: [], // ADD THIS - main cache for all properties
   allProperties: [],
   featuredProperties: [],
   carouselProperties: [],
@@ -33,13 +34,11 @@ export const usePropertyStore = create((set, get) => ({
 
   /* ---------------------- CURRENCY FUNCTIONS ---------------------- */
   initializeCurrency: async () => {
-    // Check if we're in browser environment
     if (typeof window === 'undefined') {
       set({ currencyLoading: false });
       return;
     }
 
-    // Check if user has a saved preference
     const savedCurrency = localStorage.getItem('preferred_currency');
     
     if (savedCurrency) {
@@ -47,18 +46,14 @@ export const usePropertyStore = create((set, get) => ({
       return;
     }
 
-    // Auto-detect location using ipapi.co (free, no API key needed)
     try {
       const res = await fetch('https://ipapi.co/json/');
       const data = await res.json();
-      
-      // If user is in UAE, show AED, otherwise USD
       const detectedCurrency = data.country_code === 'AE' ? 'AED' : 'USD';
       set({ currency: detectedCurrency });
       localStorage.setItem('preferred_currency', detectedCurrency);
     } catch (err) {
       console.error('Location detection failed:', err);
-      // Default to AED if detection fails
       set({ currency: 'AED' });
     } finally {
       set({ currencyLoading: false });
@@ -80,13 +75,11 @@ export const usePropertyStore = create((set, get) => ({
     let price = priceInAED;
     let symbol = 'AED';
     
-    // Convert to USD if needed
     if (currency === 'USD') {
       price = priceInAED * exchangeRate;
       symbol = 'USD';
     }
     
-    // Format with M/K suffix
     if (price >= 1000000) {
       return `${symbol} ${(price / 1000000).toFixed(2)}M`;
     }
@@ -101,7 +94,6 @@ export const usePropertyStore = create((set, get) => ({
     
     if (!range) return null;
     
-    // If it's a string with hyphen (like "5500888 - 9860888")
     if (typeof range === 'string' && range.includes('-')) {
       const parts = range.split('-').map(p => p.trim());
       if (parts.length === 2) {
@@ -111,11 +103,9 @@ export const usePropertyStore = create((set, get) => ({
           return `${formatPrice(min)} - ${formatPrice(max)}`;
         }
       }
-      // If already formatted, return as is
       return range;
     }
     
-    // If it's a number, format it
     if (typeof range === 'number') {
       return formatPrice(range);
     }
@@ -129,7 +119,6 @@ export const usePropertyStore = create((set, get) => ({
     return currency === 'USD' ? priceInAED * exchangeRate : priceInAED;
   },
 
-  // Optional: Fetch live exchange rates
   fetchExchangeRate: async () => {
     try {
       const res = await fetch('https://api.exchangerate-api.com/v4/latest/AED');
@@ -137,17 +126,36 @@ export const usePropertyStore = create((set, get) => ({
       set({ exchangeRate: data.rates.USD || AED_TO_USD });
     } catch (err) {
       console.error('Failed to fetch exchange rate:', err);
-      // Keep using the hardcoded rate
     }
   },
 
   /* ---------------------- FETCH SINGLE PROPERTY ---------------------- */
   fetchPropertyById: async (id) => {
+    // Check if property is already in cache
+    const state = get();
+    const cached = state.properties.find(p => p.id === id);
+    
+    if (cached) {
+      console.log('✅ Property found in cache');
+      set({ selectedProperty: cached });
+      return cached;
+    }
+
+    // If not cached, fetch from API
+    console.log('📡 Fetching property from API...');
     set({ loading: true });
     try {
       const res = await fetch(`/api/properties/${id}`);
       const data = await res.json();
-      set({ selectedProperty: data || null });
+      
+      if (data) {
+        // Add to cache
+        set({ 
+          selectedProperty: data,
+          properties: [...state.properties, data] // Add to cache
+        });
+      }
+      
       return data;
     } catch (err) {
       console.error("[PropertyStore] fetchPropertyById error:", err);
@@ -159,7 +167,6 @@ export const usePropertyStore = create((set, get) => ({
 
   /* ---------------------- FETCH FILTERS WITH LOCALSTORAGE CACHE ---------------------- */
   fetchFilters: async () => {
-    // Try reading from localStorage first
     const cached = localStorage.getItem("filtersMeta");
 
     if (cached) {
@@ -175,7 +182,6 @@ export const usePropertyStore = create((set, get) => ({
       } catch {}
     }
 
-    // Fetch fresh data in background
     try {
       const res = await fetch("/api/filters");
       const data = await res.json();
@@ -188,10 +194,7 @@ export const usePropertyStore = create((set, get) => ({
         amenities: data.amenities || [],
       };
 
-      // Save to Zustand
       set(filtersMeta);
-
-      // Save to localStorage for fast next loads
       localStorage.setItem("filtersMeta", JSON.stringify(filtersMeta));
 
       return data;
@@ -220,13 +223,17 @@ export const usePropertyStore = create((set, get) => ({
       const res = await fetch(url.toString());
       const data = await res.json();
 
+      const items = data?.data?.items || [];
+
+      // Update both properties cache AND allProperties
       set({
-        allProperties: data?.data?.items || [],
+        properties: items, // Main cache
+        allProperties: items, // Display list
         totalProperties: data?.data?.meta?.total || 0,
         totalPages: data?.data?.meta?.totalPages || 1,
       });
 
-      return data?.data?.items || [];
+      return items;
     } catch (err) {
       console.error("[PropertyStore] fetchProperties error:", err);
       return [];
@@ -241,8 +248,19 @@ export const usePropertyStore = create((set, get) => ({
     try {
       const res = await fetch("/api/properties?page=1&isFeatured=true&limit=12");
       const data = await res.json();
-      set({ featuredProperties: data?.data?.items || [] });
-      return data?.data?.items || [];
+      const items = data?.data?.items || [];
+      
+      // Merge into properties cache
+      const state = get();
+      const existingIds = new Set(state.properties.map(p => p.id));
+      const newItems = items.filter(item => !existingIds.has(item.id));
+      
+      set({ 
+        featuredProperties: items,
+        properties: [...state.properties, ...newItems] // Add to cache
+      });
+      
+      return items;
     } catch (err) {
       console.error("[PropertyStore] fetchFeaturedProperties error:", err);
       return [];
@@ -255,7 +273,6 @@ export const usePropertyStore = create((set, get) => ({
   fetchCarouselProperties: async () => {
     const local = localStorage.getItem("carouselProperties");
 
-    // If cached → load instantly (no flicker)
     if (local) {
       try {
         const parsed = JSON.parse(local);
@@ -263,7 +280,6 @@ export const usePropertyStore = create((set, get) => ({
       } catch {}
     }
 
-    // Fetch latest from API (background fetch)
     set({ loading: true });
     try {
       const res = await fetch(
@@ -273,10 +289,16 @@ export const usePropertyStore = create((set, get) => ({
 
       const items = data?.data?.items || [];
 
-      // Save to zustand
-      set({ carouselProperties: items });
+      // Merge into properties cache
+      const state = get();
+      const existingIds = new Set(state.properties.map(p => p.id));
+      const newItems = items.filter(item => !existingIds.has(item.id));
 
-      // Update localStorage
+      set({ 
+        carouselProperties: items,
+        properties: [...state.properties, ...newItems] // Add to cache
+      });
+
       localStorage.setItem("carouselProperties", JSON.stringify(items));
 
       return items;
