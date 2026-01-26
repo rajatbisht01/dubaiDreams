@@ -14,12 +14,28 @@ import { useUser } from "@/hooks/useUser";
 import { supabaseClient } from "@/lib/supabaseClient";
 
 const STORAGE_KEY = "property_form_draft";
+function formatPriceDisplay(value) {
+  if (!value) return "";
+  const num = parseFloat(value);
+  if (isNaN(num)) return value;
 
-export default function PropertyStepperForm({ item = null, onClose = () => {}, onSuccess = () => {} }) {
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  } else if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
+  return num.toString();
+}
+
+export default function PropertyStepperForm({
+  item = null,
+  onClose = () => {},
+  onSuccess = () => {},
+}) {
   const isEdit = !!item?.id;
   const [loading, setLoading] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
- const { profile, loading: userLoading } = useUser();
+  const { profile, loading: userLoading } = useUser();
   const userRole = profile?.role;
   const [lookups, setLookups] = useState({
     propertyTypes: [],
@@ -80,7 +96,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
   // Load draft on mount for create mode
   useEffect(() => {
     fetchLookups();
-    
+
     if (item?.id) {
       // Edit mode - load the item
       seedFromItem(item);
@@ -147,7 +163,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
   function seedFromItem(it) {
     console.log("Seeding form with item:", it);
-    
+
     setPayload((p) => ({
       ...p,
       title: it.title || "",
@@ -176,42 +192,46 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       meta_description: it.meta_description || "",
       meta_keywords: it.meta_keywords || "",
       og_image_url: it.og_image_url || "",
-      
-      amenities: Array.isArray(it.property_amenities) 
-        ? it.property_amenities.map(a => a.amenity_id) 
+
+      amenities: Array.isArray(it.property_amenities)
+        ? it.property_amenities.map((a) => a.amenity_id)
         : [],
-      
-      features: Array.isArray(it.property_features) 
-        ? it.property_features.map(f => f.feature_id) 
+
+      features: Array.isArray(it.property_features)
+        ? it.property_features.map((f) => f.feature_id)
         : [],
-      
-      views: Array.isArray(it.property_views) 
-        ? it.property_views.map(v => v.view_type_id) 
+
+      views: Array.isArray(it.property_views)
+        ? it.property_views.map((v) => v.view_type_id)
         : [],
-      
-      nearby_points: Array.isArray(it.property_nearby_points) 
-        ? it.property_nearby_points.map(np => ({
+
+      nearby_points: Array.isArray(it.property_nearby_points)
+        ? it.property_nearby_points.map((np) => ({
             id: np.id,
             category_id: np.category_id,
             name: np.name || "",
             distance_in_km: np.distance_in_km || "",
-            distance_in_minutes: np.distance_in_minutes || ""
-          })) 
+            distance_in_minutes: np.distance_in_minutes || "",
+          }))
         : [],
-      
-      construction_updates: Array.isArray(it.construction_updates) 
-        ? it.construction_updates.map(cu => ({
+
+      construction_updates: Array.isArray(it.construction_updates)
+        ? it.construction_updates.map((cu) => ({
             id: cu.id,
             update_text: cu.update_text || "",
             progress_percent: cu.progress_percent || "",
-            update_date: cu.update_date || ""
-          })) 
+            update_date: cu.update_date || "",
+          }))
         : [],
-      
-      existingImages: Array.isArray(it.property_images) ? it.property_images : [],
-      existingDocuments: Array.isArray(it.property_documents) ? it.property_documents : [],
+
+      existingImages: Array.isArray(it.property_images)
+        ? it.property_images
+        : [],
+      existingDocuments: Array.isArray(it.property_documents)
+        ? it.property_documents
+        : [],
       existingFloorPlans: Array.isArray(it.floor_plans) ? it.floor_plans : [],
-      
+
       imageFiles: [],
       documentFiles: [],
       floorPlanFiles: [],
@@ -227,24 +247,41 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
 
   function handleImageFiles(e) {
     const files = Array.from(e.target.files || []);
-    setPayload((p) => ({ ...p, imageFiles: [...(p.imageFiles || []), ...files] }));
+    setPayload((p) => ({
+      ...p,
+      imageFiles: [...(p.imageFiles || []), ...files],
+    }));
   }
-  
+
   function handleDocumentFiles(e) {
-    const files = Array.from(e.target.files || []).map((f) => ({ file: f, title: f.name, document_type_id: null }));
-    setPayload((p) => ({ ...p, documentFiles: [...(p.documentFiles || []), ...files] }));
+    const files = Array.from(e.target.files || []).map((f) => ({
+      file: f,
+      title: f.name,
+      document_type_id: null,
+    }));
+    setPayload((p) => ({
+      ...p,
+      documentFiles: [...(p.documentFiles || []), ...files],
+    }));
   }
-  
+
   function handleFloorPlanFiles(e) {
-    const files = Array.from(e.target.files || []).map((f) => ({ file: f, title: f.name, size: "" }));
-    setPayload((p) => ({ ...p, floorPlanFiles: [...(p.floorPlanFiles || []), ...files] }));
+    const files = Array.from(e.target.files || []).map((f) => ({
+      file: f,
+      title: f.name,
+      size: "",
+    }));
+    setPayload((p) => ({
+      ...p,
+      floorPlanFiles: [...(p.floorPlanFiles || []), ...files],
+    }));
   }
 
   function markExistingImageForDeletion(imageId) {
     setPayload((p) => ({
       ...p,
       imagesToDelete: [...p.imagesToDelete, imageId],
-      existingImages: p.existingImages.filter(img => img.id !== imageId)
+      existingImages: p.existingImages.filter((img) => img.id !== imageId),
     }));
   }
 
@@ -252,7 +289,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     setPayload((p) => ({
       ...p,
       documentsToDelete: [...p.documentsToDelete, docId],
-      existingDocuments: p.existingDocuments.filter(doc => doc.id !== docId)
+      existingDocuments: p.existingDocuments.filter((doc) => doc.id !== docId),
     }));
   }
 
@@ -260,14 +297,25 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     setPayload((p) => ({
       ...p,
       floorPlansToDelete: [...p.floorPlansToDelete, fpId],
-      existingFloorPlans: p.existingFloorPlans.filter(fp => fp.id !== fpId)
+      existingFloorPlans: p.existingFloorPlans.filter((fp) => fp.id !== fpId),
     }));
   }
 
   function addNearbyPoint() {
-    setPayload((p) => ({ ...p, nearby_points: [...(p.nearby_points || []), { category_id: null, name: "", distance_in_km: "", distance_in_minutes: "" }] }));
+    setPayload((p) => ({
+      ...p,
+      nearby_points: [
+        ...(p.nearby_points || []),
+        {
+          category_id: null,
+          name: "",
+          distance_in_km: "",
+          distance_in_minutes: "",
+        },
+      ],
+    }));
   }
-  
+
   function updateNearbyPoint(idx, key, val) {
     setPayload((p) => {
       const next = [...(p.nearby_points || [])];
@@ -275,7 +323,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       return { ...p, nearby_points: next };
     });
   }
-  
+
   function removeNearbyPoint(idx) {
     setPayload((p) => {
       const next = [...(p.nearby_points || [])];
@@ -285,9 +333,15 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
   }
 
   function addConstructionUpdate() {
-    setPayload((p) => ({ ...p, construction_updates: [...(p.construction_updates || []), { update_text: "", progress_percent: 0, update_date: "" }] }));
+    setPayload((p) => ({
+      ...p,
+      construction_updates: [
+        ...(p.construction_updates || []),
+        { update_text: "", progress_percent: 0, update_date: "" },
+      ],
+    }));
   }
-  
+
   function updateConstructionUpdate(idx, key, val) {
     setPayload((p) => {
       const next = [...(p.construction_updates || [])];
@@ -295,7 +349,7 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
       return { ...p, construction_updates: next };
     });
   }
-  
+
   function removeConstructionUpdate(idx) {
     setPayload((p) => {
       const next = [...(p.construction_updates || [])];
@@ -313,312 +367,332 @@ export default function PropertyStepperForm({ item = null, onClose = () => {}, o
     });
   }
 
+  async function uploadFile(file, fileType, userRole) {
+    console.log("[uploadFile] Starting authenticated upload:", {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: fileType,
+      mimeType: file.type,
+      userRole: userRole,
+    });
 
+    try {
+      // Check user role
+      if (userRole !== "admin" && userRole !== "superAdmin") {
+        throw new Error("You must be an admin to upload files");
+      }
 
-async function uploadFile(file, fileType, userRole) {
-  console.log("[uploadFile] Starting authenticated upload:", {
-    fileName: file.name,
-    fileSize: file.size,
-    fileType: fileType,
-    mimeType: file.type,
-    userRole: userRole
-  });
+      const supabase = supabaseClient();
 
-  try {
-    // Check user role
-    if (userRole !== "admin" && userRole !== "superAdmin") {
-      throw new Error("You must be an admin to upload files");
+      // ===== END DEBUG CODE =====
+
+      // Determine bucket
+      let bucket = "property-documents";
+      if (fileType === "image") {
+        bucket = "property-images";
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const sanitizedName = file.name
+        .replace(/[^a-zA-Z0-9.-]/g, "_")
+        .replace(/_{2,}/g, "_")
+        .toLowerCase();
+      const filename = `${timestamp}-${sanitizedName}`;
+
+      console.log(`[uploadFile] Uploading to ${bucket}/${filename}...`);
+
+      // Upload
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(filename, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type || "application/octet-stream",
+        });
+
+      if (error) {
+        console.error("[uploadFile] Supabase upload error:", error);
+        throw new Error(error.message || "Upload failed");
+      }
+
+      if (!data?.path) {
+        throw new Error("No path returned from upload");
+      }
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from(bucket).getPublicUrl(data.path);
+
+      console.log("[uploadFile] ✅ Upload successful:", publicUrl);
+      return publicUrl;
+    } catch (error) {
+      console.error("[uploadFile] ❌ Upload failed:", error);
+      throw error;
     }
-
-   
-    
-    const supabase = supabaseClient();
-
-    // ===== END DEBUG CODE =====
-
-    // Determine bucket
-    let bucket = "property-documents";
-    if (fileType === "image") {
-      bucket = "property-images";
-    }
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const sanitizedName = file.name
-      .replace(/[^a-zA-Z0-9.-]/g, '_')
-      .replace(/_{2,}/g, '_')
-      .toLowerCase();
-    const filename = `${timestamp}-${sanitizedName}`;
-
-    console.log(`[uploadFile] Uploading to ${bucket}/${filename}...`);
-
-    // Upload
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(filename, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type || 'application/octet-stream'
-      });
-
-    if (error) {
-      console.error("[uploadFile] Supabase upload error:", error);
-      throw new Error(error.message || "Upload failed");
-    }
-
-    if (!data?.path) {
-      throw new Error("No path returned from upload");
-    }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-
-    console.log("[uploadFile] ✅ Upload successful:", publicUrl);
-    return publicUrl;
-
-  } catch (error) {
-    console.error("[uploadFile] ❌ Upload failed:", error);
-    throw error;
   }
-}
-
-
-
 
   async function postBatch(url, dataArray) {
     if (!dataArray.length) return;
     return Promise.allSettled(
-      dataArray.map(data =>
+      dataArray.map((data) =>
         fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
-        })
-      )
+        }),
+      ),
     );
   }
 
   async function deleteBatch(url, ids) {
     if (!ids.length) return;
     return Promise.allSettled(
-      ids.map(id =>
-        fetch(`${url}/${id}`, { method: "DELETE" })
-      )
+      ids.map((id) => fetch(`${url}/${id}`, { method: "DELETE" })),
     );
   }
 
-
-
-async function handleFinalSubmit() {
-  setLoading(true);
-  setError(null);
-if(userLoading) {
-  toast.error("User data is still loading. Please try again.");
-  setLoading(false);
-  return;
-}
-
-if(userRole !== "admin" && userRole !== "superAdmin") { 
-  toast.error("You do not have permission to perform this action.");
-  setLoading(false);
-  return;
-}
-
-  const successMessage = isEdit ? "Property updated!" : "Property created!";
-  
-  try {
-    const propertyPayload = {
-      title: payload.title,
-      isFeatured: payload.isFeatured,
-      slug: payload.slug?.trim() || payload.title?.toLowerCase().replace(/\s+/g, "-").slice(0, 200),
-      description: payload.description,
-      developer_id: payload.developer_id,
-      community_id: payload.community_id,
-      property_type_id: payload.property_type_id,
-      status_id: payload.status_id,
-      latitude: payload.latitude || null,
-      longitude: payload.longitude || null,
-      starting_price: payload.starting_price || null,
-      price_range: payload.price_range || null,
-      bedrooms: payload.bedrooms || null,
-      bathrooms: payload.bathrooms || null,
-      size_range: payload.size_range || null,
-      handover: payload.handover || null,
-      roi: payload.roi || null,
-      service_charge: payload.service_charge || null,
-      market_price_psf: payload.market_price_psf || null,
-      rental_price_psf: payload.rental_price_psf || null,
-      annual_rent: payload.annual_rent || null,
-      estimated_yield: payload.estimated_yield || null,
-      meta_title: payload.meta_title || null,
-      meta_description: payload.meta_description || null,
-      meta_keywords: payload.meta_keywords || null,
-      og_image_url: payload.og_image_url || null,
-      amenities: payload.amenities || [],
-      features: payload.features || [],
-      views: payload.views || [],
-      nearby_points: payload.nearby_points || [],
-      construction_updates: payload.construction_updates || [],
-    };
-
-    // Step 1: Save property
-    const url = isEdit ? `/api/admin/properties/${item.id}` : `/api/admin/properties`;
-    const method = isEdit ? "PUT" : "POST";
-
-    const saveRes = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(propertyPayload),
-    });
-
-    if (!saveRes.ok) {
-      const err = await saveRes.json().catch(() => ({ error: "save error" }));
-      throw new Error(err.error || "Failed to save property");
-    }
-
-    const saved = await saveRes.json();
-    const propertyId = saved.id;
-
-    if (!propertyId) throw new Error("No property ID returned");
-
-    // Step 2:
-    try {
-      await Promise.allSettled([
-        deleteBatch(`/api/admin/properties/${propertyId}/images`, payload.imagesToDelete),
-        deleteBatch(`/api/admin/properties/${propertyId}/documents`, payload.documentsToDelete),
-        deleteBatch(`/api/admin/properties/${propertyId}/floor-plans`, payload.floorPlansToDelete),
-      ]);
-    } catch (delErr) {
-      console.error("Deletion error:", delErr);
-    }
-
-    // Step 3: Upload new files
-    console.log("[handleFinalSubmit] Starting file uploads...");
-    
-    let imageUrls = [];
-    let documentData = [];
-    let floorPlanData = [];
-
-    try {
-      // Upload images
-      if (payload.imageFiles?.length > 0) {
-        console.log(`[handleFinalSubmit] Uploading ${payload.imageFiles.length} images...`);
-        imageUrls = await Promise.all(
-          payload.imageFiles.map((f, idx) => {
-            console.log(`[handleFinalSubmit] Uploading image ${idx + 1}/${payload.imageFiles.length}`);
-            return uploadFile(f, "image", userRole);
-          })
-        );
-        console.log("[handleFinalSubmit] All images uploaded successfully");
-      }
-
-      // Upload documents - ONE AT A TIME to see which fails
-      if (payload.documentFiles?.length > 0) {
-        console.log(`[handleFinalSubmit] Uploading ${payload.documentFiles.length} documents...`);
-        
-        for (let i = 0; i < payload.documentFiles.length; i++) {
-          const d = payload.documentFiles[i];
-          console.log(`[handleFinalSubmit] Uploading document ${i + 1}/${payload.documentFiles.length}: ${d.file.name}`);
-          
-          try {
-            const url = await uploadFile(d.file, "document", userRole);
-            documentData.push({
-              url: url,
-              title: d.title,
-              document_type_id: d.document_type_id
-            });
-            console.log(`[handleFinalSubmit] Document ${i + 1} uploaded successfully`);
-          } catch (docErr) {
-            console.error(`[handleFinalSubmit] Failed to upload document ${i + 1}:`, {
-              fileName: d.file.name,
-              fileSize: d.file.size,
-              fileType: d.file.type,
-              error: docErr.message
-            });
-            throw new Error(`Failed to upload document "${d.file.name}": ${docErr.message}`);
-          }
-        }
-        
-        console.log("[handleFinalSubmit] All documents uploaded successfully");
-      }
-
-      // Upload floor plans
-      if (payload.floorPlanFiles?.length > 0) {
-        console.log(`[handleFinalSubmit] Uploading ${payload.floorPlanFiles.length} floor plans...`);
-        floorPlanData = await Promise.all(
-          payload.floorPlanFiles.map(async (fp) => {
-            const url = await uploadFile(fp.file, "document", userRole);
-            return {
-              url: url,
-              title: fp.title,
-              size: fp.size
-            };
-          })
-        );
-        console.log("[handleFinalSubmit] All floor plans uploaded");
-      }
-
-    } catch (uploadErr) {
-      console.error("[handleFinalSubmit] Upload error:", uploadErr);
+  async function handleFinalSubmit() {
+    setLoading(true);
+    setError(null);
+    if (userLoading) {
+      toast.error("User data is still loading. Please try again.");
       setLoading(false);
-      setError("File upload failed: " + uploadErr.message);
-      toast.error("File upload failed: " + uploadErr.message);
       return;
     }
 
-    // Step 4: Save uploaded files to database
+    if (userRole !== "admin" && userRole !== "superAdmin") {
+      toast.error("You do not have permission to perform this action.");
+      setLoading(false);
+      return;
+    }
+
+    const successMessage = isEdit ? "Property updated!" : "Property created!";
+
     try {
-      await Promise.allSettled([
-        postBatch(
-          `/api/properties/${propertyId}/images`,
-          imageUrls.map((url, idx) => ({
-            image_url: url,
-            isFeatured: false,
-            sort_order: idx,
-          }))
-        ),
-        postBatch(
-          `/api/properties/${propertyId}/documents`,
-          documentData.map((doc, idx) => ({
-            document_type_id: doc.document_type_id,
-            title: doc.title,
-            file_url: doc.url,
-            sort_order: idx,
-          }))
-        ),
-        postBatch(
-          `/api/properties/${propertyId}/floor-plans`,
-          floorPlanData.map((fp) => ({
-            title: fp.title,
-            size: fp.size,
-            pdf_url: fp.url,
-          }))
-        ),
-      ]);
-    } catch (postErr) {
-      console.error("Post-batch error:", postErr);
-      toast.warning("Property saved but some files may not be linked properly.");
+      const propertyPayload = {
+        title: payload.title,
+        isFeatured: payload.isFeatured,
+        slug:
+          payload.slug?.trim() ||
+          payload.title?.toLowerCase().replace(/\s+/g, "-").slice(0, 200),
+        description: payload.description,
+        developer_id: payload.developer_id,
+        community_id: payload.community_id,
+        property_type_id: payload.property_type_id,
+        status_id: payload.status_id,
+        latitude: payload.latitude || null,
+        longitude: payload.longitude || null,
+        starting_price: payload.starting_price || null,
+        price_range: payload.price_range || null,
+        bedrooms: payload.bedrooms || null,
+        bathrooms: payload.bathrooms || null,
+        size_range: payload.size_range || null,
+        handover: payload.handover || null,
+        roi: payload.roi || null,
+        service_charge: payload.service_charge || null,
+        market_price_psf: payload.market_price_psf || null,
+        rental_price_psf: payload.rental_price_psf || null,
+        annual_rent: payload.annual_rent || null,
+        estimated_yield: payload.estimated_yield || null,
+        meta_title: payload.meta_title || null,
+        meta_description: payload.meta_description || null,
+        meta_keywords: payload.meta_keywords || null,
+        og_image_url: payload.og_image_url || null,
+        amenities: payload.amenities || [],
+        features: payload.features || [],
+        views: payload.views || [],
+        nearby_points: payload.nearby_points || [],
+        construction_updates: payload.construction_updates || [],
+      };
+
+      // Step 1: Save property
+      const url = isEdit
+        ? `/api/admin/properties/${item.id}`
+        : `/api/admin/properties`;
+      const method = isEdit ? "PUT" : "POST";
+
+      const saveRes = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(propertyPayload),
+      });
+
+      if (!saveRes.ok) {
+        const err = await saveRes.json().catch(() => ({ error: "save error" }));
+        throw new Error(err.error || "Failed to save property");
+      }
+
+      const saved = await saveRes.json();
+      const propertyId = saved.id;
+
+      if (!propertyId) throw new Error("No property ID returned");
+
+      // Step 2:
+      try {
+        await Promise.allSettled([
+          deleteBatch(
+            `/api/admin/properties/${propertyId}/images`,
+            payload.imagesToDelete,
+          ),
+          deleteBatch(
+            `/api/admin/properties/${propertyId}/documents`,
+            payload.documentsToDelete,
+          ),
+          deleteBatch(
+            `/api/admin/properties/${propertyId}/floor-plans`,
+            payload.floorPlansToDelete,
+          ),
+        ]);
+      } catch (delErr) {
+        console.error("Deletion error:", delErr);
+      }
+
+      // Step 3: Upload new files
+      console.log("[handleFinalSubmit] Starting file uploads...");
+
+      let imageUrls = [];
+      let documentData = [];
+      let floorPlanData = [];
+
+      try {
+        // Upload images
+        if (payload.imageFiles?.length > 0) {
+          console.log(
+            `[handleFinalSubmit] Uploading ${payload.imageFiles.length} images...`,
+          );
+          imageUrls = await Promise.all(
+            payload.imageFiles.map((f, idx) => {
+              console.log(
+                `[handleFinalSubmit] Uploading image ${idx + 1}/${payload.imageFiles.length}`,
+              );
+              return uploadFile(f, "image", userRole);
+            }),
+          );
+          console.log("[handleFinalSubmit] All images uploaded successfully");
+        }
+
+        // Upload documents - ONE AT A TIME to see which fails
+        if (payload.documentFiles?.length > 0) {
+          console.log(
+            `[handleFinalSubmit] Uploading ${payload.documentFiles.length} documents...`,
+          );
+
+          for (let i = 0; i < payload.documentFiles.length; i++) {
+            const d = payload.documentFiles[i];
+            console.log(
+              `[handleFinalSubmit] Uploading document ${i + 1}/${payload.documentFiles.length}: ${d.file.name}`,
+            );
+
+            try {
+              const url = await uploadFile(d.file, "document", userRole);
+              documentData.push({
+                url: url,
+                title: d.title,
+                document_type_id: d.document_type_id,
+              });
+              console.log(
+                `[handleFinalSubmit] Document ${i + 1} uploaded successfully`,
+              );
+            } catch (docErr) {
+              console.error(
+                `[handleFinalSubmit] Failed to upload document ${i + 1}:`,
+                {
+                  fileName: d.file.name,
+                  fileSize: d.file.size,
+                  fileType: d.file.type,
+                  error: docErr.message,
+                },
+              );
+              throw new Error(
+                `Failed to upload document "${d.file.name}": ${docErr.message}`,
+              );
+            }
+          }
+
+          console.log(
+            "[handleFinalSubmit] All documents uploaded successfully",
+          );
+        }
+
+        // Upload floor plans
+        if (payload.floorPlanFiles?.length > 0) {
+          console.log(
+            `[handleFinalSubmit] Uploading ${payload.floorPlanFiles.length} floor plans...`,
+          );
+          floorPlanData = await Promise.all(
+            payload.floorPlanFiles.map(async (fp) => {
+              const url = await uploadFile(fp.file, "document", userRole);
+              return {
+                url: url,
+                title: fp.title,
+                size: fp.size,
+              };
+            }),
+          );
+          console.log("[handleFinalSubmit] All floor plans uploaded");
+        }
+      } catch (uploadErr) {
+        console.error("[handleFinalSubmit] Upload error:", uploadErr);
+        setLoading(false);
+        setError("File upload failed: " + uploadErr.message);
+        toast.error("File upload failed: " + uploadErr.message);
+        return;
+      }
+
+      // Step 4: Save uploaded files to database
+      try {
+        await Promise.allSettled([
+          postBatch(
+            `/api/properties/${propertyId}/images`,
+            imageUrls.map((url, idx) => ({
+              image_url: url,
+              isFeatured: false,
+              sort_order: idx,
+            })),
+          ),
+          postBatch(
+            `/api/properties/${propertyId}/documents`,
+            documentData.map((doc, idx) => ({
+              document_type_id: doc.document_type_id,
+              title: doc.title,
+              file_url: doc.url,
+              sort_order: idx,
+            })),
+          ),
+          postBatch(
+            `/api/properties/${propertyId}/floor-plans`,
+            floorPlanData.map((fp) => ({
+              title: fp.title,
+              size: fp.size,
+              pdf_url: fp.url,
+            })),
+          ),
+        ]);
+      } catch (postErr) {
+        console.error("Post-batch error:", postErr);
+        toast.warning(
+          "Property saved but some files may not be linked properly.",
+        );
+      }
+
+      // Success!
+      if (!isEdit) {
+        clearDraft();
+      }
+
+      toast.success(successMessage);
+      setLoading(false);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      console.error("Property save error", err);
+      setError(err.message || "Error");
+      setLoading(false);
+      toast.error(err.message || "Failed to save property");
     }
-
-    // Success!
-    if (!isEdit) {
-      clearDraft();
-    }
-
-    toast.success(successMessage);
-    setLoading(false);
-    onSuccess();
-    onClose();
-
-  } catch (err) {
-    console.error("Property save error", err);
-    setError(err.message || "Error");
-    setLoading(false);
-    toast.error(err.message || "Failed to save property");
   }
-}
 
   function removeFileFromList(listKey, index) {
     setPayload((p) => {
@@ -628,13 +702,14 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
     });
   }
 
-  const imagePreviews = useMemo(() => 
-    (payload.imageFiles || []).map((f, i) => ({
-      url: URL.createObjectURL(f),
-      name: f.name,
-      index: i
-    })),
-    [payload.imageFiles]
+  const imagePreviews = useMemo(
+    () =>
+      (payload.imageFiles || []).map((f, i) => ({
+        url: URL.createObjectURL(f),
+        name: f.name,
+        index: i,
+      })),
+    [payload.imageFiles],
   );
 
   return (
@@ -669,7 +744,11 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
         <Step>
           <div className="space-y-4">
             <Label>Title</Label>
-            <Input value={payload.title} onChange={(e) => setField("title", e.target.value)} placeholder="Title" />
+            <Input
+              value={payload.title}
+              onChange={(e) => setField("title", e.target.value)}
+              placeholder="Title"
+            />
             <div className="flex items-center gap-2 mt-2">
               <Checkbox
                 checked={payload.isFeatured}
@@ -679,46 +758,70 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
             </div>
 
             <Label>Description</Label>
-            <Textarea className={'ring-1'} value={payload.description} onChange={(e) => setField("description", e.target.value)} />
-          
+            <Textarea
+              className={"ring-1"}
+              value={payload.description}
+              onChange={(e) => setField("description", e.target.value)}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Developer</Label>
-                <select value={payload.developer_id || ""} onChange={(e) => setField("developer_id", e.target.value || null)} className="w-full border rounded p-2">
+                <select
+                  value={payload.developer_id || ""}
+                  onChange={(e) =>
+                    setField("developer_id", e.target.value || null)
+                  }
+                  className="w-full border rounded p-2"
+                >
                   <option value="">Select developer</option>
-                  {lookups.developers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  {lookups.developers.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <Label>Community</Label>
-                <select value={payload.community_id || ""} onChange={(e) => setField("community_id", e.target.value || null)} className="w-full border rounded p-2">
+                <select
+                  value={payload.community_id || ""}
+                  onChange={(e) =>
+                    setField("community_id", e.target.value || null)
+                  }
+                  className="w-full border rounded p-2"
+                >
                   <option value="">Select community</option>
-                  {lookups.communities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {lookups.communities.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
-            
-             <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Latitude</Label>
-                <Input 
-                  type="number" 
+                <Input
+                  type="number"
                   step="any"
-                  value={payload.latitude} 
-                  onChange={(e) => setField("latitude", e.target.value)} 
-                  placeholder="e.g., 25.2048" 
+                  value={payload.latitude}
+                  onChange={(e) => setField("latitude", e.target.value)}
+                  placeholder="e.g., 25.2048"
                 />
               </div>
 
               <div>
                 <Label>Longitude</Label>
-                <Input 
-                  type="number" 
+                <Input
+                  type="number"
                   step="any"
-                  value={payload.longitude} 
-                  onChange={(e) => setField("longitude", e.target.value)} 
-                  placeholder="e.g., 55.2708" 
+                  value={payload.longitude}
+                  onChange={(e) => setField("longitude", e.target.value)}
+                  placeholder="e.g., 55.2708"
                 />
               </div>
             </div>
@@ -726,89 +829,172 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Property Type</Label>
-                <select value={payload.property_type_id || ""} onChange={(e) => setField("property_type_id", e.target.value || null)} className="w-full border rounded p-2">
+                <select
+                  value={payload.property_type_id || ""}
+                  onChange={(e) =>
+                    setField("property_type_id", e.target.value || null)
+                  }
+                  className="w-full border rounded p-2"
+                >
                   <option value="">Select type</option>
-                  {lookups.propertyTypes.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  {lookups.propertyTypes.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <Label>Status</Label>
-                <select value={payload.status_id || ""} onChange={(e) => setField("status_id", e.target.value || null)} className="w-full border rounded p-2">
+                <select
+                  value={payload.status_id || ""}
+                  onChange={(e) =>
+                    setField("status_id", e.target.value || null)
+                  }
+                  className="w-full border rounded p-2"
+                >
                   <option value="">Select status</option>
-                  {lookups.statusTypes.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {lookups.statusTypes.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
           </div>
         </Step>
 
-       
-      {/* Step 2: Pricing */}
+        {/* Step 2: Pricing */}
         <Step>
           <div className="space-y-4">
-            <Label>Starting Price (AED)</Label>
-            <Input value={payload.starting_price} onChange={(e) => setField("starting_price", e.target.value)} type="number" />
+            <div className="relative">
+              <Label>Starting Price (AED)</Label>
+              <Input
+                value={payload.starting_price}
+                onChange={(e) => setField("starting_price", e.target.value)}
+                type="number"
+              />
+              {payload.starting_price &&
+                parseFloat(payload.starting_price) >= 1000 && (
+                  <span className="text-xs text-muted-foreground mt-1 block">
+                    ≈ {formatPriceDisplay(payload.starting_price)} AED
+                  </span>
+                )}
+            </div>
 
             <div>
               <Label>Price Range (AED)</Label>
               <div className="grid grid-cols-2 gap-4 mt-2">
-                <Input 
-                  type="number"
-                  placeholder="Min Price" 
-                  value={payload.price_range ? payload.price_range.split('-')[0] : ''} 
-                  onChange={(e) => {
-                    const min = e.target.value;
-                    const max = payload.price_range ? payload.price_range.split('-')[1] : '';
-                    setField("price_range", min && max ? `${min}-${max}` : min);
-                  }} 
-                />
-                <Input 
-                  type="number"
-                  placeholder="Max Price" 
-                  value={payload.price_range ? payload.price_range.split('-')[1] : ''} 
-                  onChange={(e) => {
-                    const min = payload.price_range ? payload.price_range.split('-')[0] : '';
-                    const max = e.target.value;
-                    setField("price_range", min && max ? `${min}-${max}` : max);
-                  }} 
-                />
+                <div className="relative">
+                  <Input
+                    type="number"
+                    placeholder="Min Price"
+                    value={
+                      payload.price_range
+                        ? payload.price_range.split("-")[0]
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const min = e.target.value;
+                      const max = payload.price_range
+                        ? payload.price_range.split("-")[1]
+                        : "";
+                      setField(
+                        "price_range",
+                        min && max ? `${min}-${max}` : min,
+                      );
+                    }}
+                  />
+                  {payload.price_range &&
+                    payload.price_range.split("-")[0] &&
+                    parseFloat(payload.price_range.split("-")[0]) >= 1000 && (
+                      <span className="text-xs text-muted-foreground mt-1 block">
+                        ≈{" "}
+                        {formatPriceDisplay(payload.price_range.split("-")[0])}
+                      </span>
+                    )}
+                </div>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    placeholder="Max Price"
+                    value={
+                      payload.price_range
+                        ? payload.price_range.split("-")[1]
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const min = payload.price_range
+                        ? payload.price_range.split("-")[0]
+                        : "";
+                      const max = e.target.value;
+                      setField(
+                        "price_range",
+                        min && max ? `${min}-${max}` : max,
+                      );
+                    }}
+                  />
+                  {payload.price_range &&
+                    payload.price_range.split("-")[1] &&
+                    parseFloat(payload.price_range.split("-")[1]) >= 1000 && (
+                      <span className="text-xs text-muted-foreground mt-1 block">
+                        ≈{" "}
+                        {formatPriceDisplay(payload.price_range.split("-")[1])}
+                      </span>
+                    )}
+                </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Bedrooms</Label>
-                <Input value={payload.bedrooms} onChange={(e) => setField("bedrooms", e.target.value)} />
+                <Input
+                  value={payload.bedrooms}
+                  onChange={(e) => setField("bedrooms", e.target.value)}
+                />
               </div>
               <div>
                 <Label>Estimated Yield (%)</Label>
-                <Input value={payload.estimated_yield} onChange={(e) => setField("estimated_yield", e.target.value)} />
+                <Input
+                  value={payload.estimated_yield}
+                  onChange={(e) => setField("estimated_yield", e.target.value)}
+                />
               </div>
             </div>
 
             <div>
               <Label>Size Range (sqft)</Label>
               <div className="grid grid-cols-2 gap-4 mt-2">
-                <Input 
+                <Input
                   type="number"
-                  placeholder="Min Size" 
-                  value={payload.size_range ? payload.size_range.split('-')[0] : ''} 
+                  placeholder="Min Size"
+                  value={
+                    payload.size_range ? payload.size_range.split("-")[0] : ""
+                  }
                   onChange={(e) => {
                     const min = e.target.value;
-                    const max = payload.size_range ? payload.size_range.split('-')[1] : '';
+                    const max = payload.size_range
+                      ? payload.size_range.split("-")[1]
+                      : "";
                     setField("size_range", min && max ? `${min}-${max}` : min);
-                  }} 
+                  }}
                 />
-                <Input 
+                <Input
                   type="number"
-                  placeholder="Max Size" 
-                  value={payload.size_range ? payload.size_range.split('-')[1] : ''} 
+                  placeholder="Max Size"
+                  value={
+                    payload.size_range ? payload.size_range.split("-")[1] : ""
+                  }
                   onChange={(e) => {
-                    const min = payload.size_range ? payload.size_range.split('-')[0] : '';
+                    const min = payload.size_range
+                      ? payload.size_range.split("-")[0]
+                      : "";
                     const max = e.target.value;
                     setField("size_range", min && max ? `${min}-${max}` : max);
-                  }} 
+                  }}
                 />
               </div>
             </div>
@@ -816,11 +1002,17 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>ROI</Label>
-                <Input value={payload.roi} onChange={(e) => setField("roi", e.target.value)} />
+                <Input
+                  value={payload.roi}
+                  onChange={(e) => setField("roi", e.target.value)}
+                />
               </div>
               <div>
                 <Label>Service Charge</Label>
-                <Input value={payload.service_charge} onChange={(e) => setField("service_charge", e.target.value)} />
+                <Input
+                  value={payload.service_charge}
+                  onChange={(e) => setField("service_charge", e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -834,11 +1026,18 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
                 <Label>Existing Images</Label>
                 <div className="mt-2 grid grid-cols-3 gap-2">
                   {payload.existingImages.map((img) => (
-                    <div key={img.id} className="p-1 border rounded relative group">
-                      <img src={img.image_url} alt="property" className="w-full h-24 object-cover rounded" />
-                      <button 
-                        type="button" 
-                        onClick={() => markExistingImageForDeletion(img.id)} 
+                    <div
+                      key={img.id}
+                      className="p-1 border rounded relative group"
+                    >
+                      <img
+                        src={img.image_url}
+                        alt="property"
+                        className="w-full h-24 object-cover rounded"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => markExistingImageForDeletion(img.id)}
                         className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X size={16} />
@@ -851,14 +1050,29 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
 
             <Label>Upload New Images</Label>
             <label className="block mt-2">
-              <input type="file" accept="image/*" multiple onChange={handleImageFiles} />
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageFiles}
+              />
             </label>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
               {imagePreviews.map(({ url, name, index }) => (
                 <div key={index} className="p-1 border rounded relative">
-                  <img src={url} alt={name} className="w-full h-24 object-cover rounded" />
-                  <button type="button" onClick={() => removeFileFromList("imageFiles", index)} className="absolute top-1 right-1 bg-white rounded px-1">×</button>
+                  <img
+                    src={url}
+                    alt={name}
+                    className="w-full h-24 object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFileFromList("imageFiles", index)}
+                    className="absolute top-1 right-1 bg-white rounded px-1"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
               {imagePreviews.length === 0 && !isEdit && (
@@ -877,10 +1091,25 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
             <div className="space-y-2 mb-6">
               <Label>Existing Documents</Label>
               {payload.existingDocuments.map((doc) => (
-                <div key={doc.id} className="flex gap-2 items-center border p-2 rounded">
+                <div
+                  key={doc.id}
+                  className="flex gap-2 items-center border p-2 rounded"
+                >
                   <span className="flex-1">{doc.title}</span>
-                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm">View</a>
-                  <button onClick={() => markExistingDocumentForDeletion(doc.id)} className="text-red-600">×</button>
+                  <a
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 text-sm"
+                  >
+                    View
+                  </a>
+                  <button
+                    onClick={() => markExistingDocumentForDeletion(doc.id)}
+                    className="text-red-600"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
             </div>
@@ -891,16 +1120,40 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
             <input type="file" multiple onChange={handleDocumentFiles} />
             {(payload.documentFiles || []).map((d, idx) => (
               <div key={idx} className="flex gap-2 items-center">
-                <input className="border p-1 flex-1" value={d.title} onChange={(e) => {
-                  const arr = [...payload.documentFiles]; arr[idx] = { ...arr[idx], title: e.target.value }; setPayload(p=>({ ...p, documentFiles: arr }));
-                }} />
-                <select className="border p-1" value={d.document_type_id || ""} onChange={(e) => {
-                  const arr = [...payload.documentFiles]; arr[idx] = { ...arr[idx], document_type_id: e.target.value || null }; setPayload(p=>({ ...p, documentFiles: arr }));
-                }}>
+                <input
+                  className="border p-1 flex-1"
+                  value={d.title}
+                  onChange={(e) => {
+                    const arr = [...payload.documentFiles];
+                    arr[idx] = { ...arr[idx], title: e.target.value };
+                    setPayload((p) => ({ ...p, documentFiles: arr }));
+                  }}
+                />
+                <select
+                  className="border p-1"
+                  value={d.document_type_id || ""}
+                  onChange={(e) => {
+                    const arr = [...payload.documentFiles];
+                    arr[idx] = {
+                      ...arr[idx],
+                      document_type_id: e.target.value || null,
+                    };
+                    setPayload((p) => ({ ...p, documentFiles: arr }));
+                  }}
+                >
                   <option value="">-- type --</option>
-                  {lookups.documentTypes.map(dt => <option key={dt.id} value={dt.id}>{dt.name}</option>)}
+                  {lookups.documentTypes.map((dt) => (
+                    <option key={dt.id} value={dt.id}>
+                      {dt.name}
+                    </option>
+                  ))}
                 </select>
-                <button onClick={() => removeFileFromList("documentFiles", idx)} className="px-2">×</button>
+                <button
+                  onClick={() => removeFileFromList("documentFiles", idx)}
+                  className="px-2"
+                >
+                  ×
+                </button>
               </div>
             ))}
           </div>
@@ -909,27 +1162,67 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
             <div className="space-y-2 mb-6">
               <Label>Existing Floor Plans</Label>
               {payload.existingFloorPlans.map((fp) => (
-                <div key={fp.id} className="flex gap-2 items-center border p-2 rounded">
-                  <span className="flex-1">{fp.title} {fp.size && `(${fp.size})`}</span>
-                  <a href={fp.pdf_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm">View</a>
-                  <button onClick={() => markExistingFloorPlanForDeletion(fp.id)} className="text-red-600">×</button>
+                <div
+                  key={fp.id}
+                  className="flex gap-2 items-center border p-2 rounded"
+                >
+                  <span className="flex-1">
+                    {fp.title} {fp.size && `(${fp.size})`}
+                  </span>
+                  <a
+                    href={fp.pdf_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 text-sm"
+                  >
+                    View
+                  </a>
+                  <button
+                    onClick={() => markExistingFloorPlanForDeletion(fp.id)}
+                    className="text-red-600"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
             </div>
           )}
-          
+
           <div className="space-y-3">
             <Label>Upload New Floor Plans (PDF)</Label>
-            <input type="file" accept="application/pdf" multiple onChange={handleFloorPlanFiles} />
+            <input
+              type="file"
+              accept="application/pdf"
+              multiple
+              onChange={handleFloorPlanFiles}
+            />
             {(payload.floorPlanFiles || []).map((d, idx) => (
               <div key={idx} className="flex gap-2 items-center">
-                <input className="border p-1 flex-1" value={d.title} onChange={(e) => {
-                  const arr = [...payload.floorPlanFiles]; arr[idx] = { ...arr[idx], title: e.target.value }; setPayload(p=>({ ...p, floorPlanFiles: arr }));
-                }} />
-                <input className="border p-1" placeholder="size (e.g., 1200 sqft)" value={d.size} onChange={(e) => {
-                  const arr = [...payload.floorPlanFiles]; arr[idx] = { ...arr[idx], size: e.target.value }; setPayload(p=>({ ...p, floorPlanFiles: arr }));
-                }} />
-                <button onClick={() => removeFileFromList("floorPlanFiles", idx)} className="px-2">×</button>
+                <input
+                  className="border p-1 flex-1"
+                  value={d.title}
+                  onChange={(e) => {
+                    const arr = [...payload.floorPlanFiles];
+                    arr[idx] = { ...arr[idx], title: e.target.value };
+                    setPayload((p) => ({ ...p, floorPlanFiles: arr }));
+                  }}
+                />
+                <input
+                  className="border p-1"
+                  placeholder="size (e.g., 1200 sqft)"
+                  value={d.size}
+                  onChange={(e) => {
+                    const arr = [...payload.floorPlanFiles];
+                    arr[idx] = { ...arr[idx], size: e.target.value };
+                    setPayload((p) => ({ ...p, floorPlanFiles: arr }));
+                  }}
+                />
+                <button
+                  onClick={() => removeFileFromList("floorPlanFiles", idx)}
+                  className="px-2"
+                >
+                  ×
+                </button>
               </div>
             ))}
           </div>
@@ -968,7 +1261,6 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
               </div>
             </div>
 
-           
             <div>
               <Label>Choose Views</Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 max-h-64 overflow-y-auto border p-3 rounded-md">
@@ -993,13 +1285,52 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
             <div className="space-y-2">
               {(payload.nearby_points || []).map((np, idx) => (
                 <div key={idx} className="grid grid-cols-6 gap-2 items-center">
-                  <select className="col-span-2 border p-1" value={np.category_id || ""} onChange={(e) => updateNearbyPoint(idx, "category_id", e.target.value || null)}>
+                  <select
+                    className="col-span-2 border p-1"
+                    value={np.category_id || ""}
+                    onChange={(e) =>
+                      updateNearbyPoint(
+                        idx,
+                        "category_id",
+                        e.target.value || null,
+                      )
+                    }
+                  >
                     <option value="">Category</option>
-                    {lookups.nearbyCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {lookups.nearbyCategories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
-                  <input className="col-span-2 border p-1" value={np.name} onChange={(e) => updateNearbyPoint(idx, "name", e.target.value)} placeholder="Name" />
-                  <input className="p-1 border" value={np.distance_in_km} onChange={(e) => updateNearbyPoint(idx, "distance_in_km", e.target.value)} placeholder="km" />
-                  <input className="p-1 border" value={np.distance_in_minutes} onChange={(e) => updateNearbyPoint(idx, "distance_in_minutes", e.target.value)} placeholder="mins" />
+                  <input
+                    className="col-span-2 border p-1"
+                    value={np.name}
+                    onChange={(e) =>
+                      updateNearbyPoint(idx, "name", e.target.value)
+                    }
+                    placeholder="Name"
+                  />
+                  <input
+                    className="p-1 border"
+                    value={np.distance_in_km}
+                    onChange={(e) =>
+                      updateNearbyPoint(idx, "distance_in_km", e.target.value)
+                    }
+                    placeholder="km"
+                  />
+                  <input
+                    className="p-1 border"
+                    value={np.distance_in_minutes}
+                    onChange={(e) =>
+                      updateNearbyPoint(
+                        idx,
+                        "distance_in_minutes",
+                        e.target.value,
+                      )
+                    }
+                    placeholder="mins"
+                  />
                   <div className="col-span-6 grid grid-cols-2 gap-4">
                     <div>
                       <Label>Latitude</Label>
@@ -1011,7 +1342,9 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
                           updateNearbyPoint(
                             idx,
                             "lat",
-                            e.target.value === "" ? null : Number(e.target.value)
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value),
                           )
                         }
                         placeholder="e.g., 25.2048"
@@ -1028,18 +1361,30 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
                           updateNearbyPoint(
                             idx,
                             "long",
-                            e.target.value === "" ? null : Number(e.target.value)
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value),
                           )
                         }
                         placeholder="e.g., 55.2708"
                       />
                     </div>
                   </div>
-     
-                  <button className="col-span-6 mt-1 text-sm text-red-600" onClick={() => removeNearbyPoint(idx)}>Remove</button>
+
+                  <button
+                    className="col-span-6 mt-1 text-sm text-red-600"
+                    onClick={() => removeNearbyPoint(idx)}
+                  >
+                    Remove
+                  </button>
                 </div>
               ))}
-              <button onClick={addNearbyPoint} className="mt-2 px-3 py-1 bg-gray-100 rounded">Add Nearby Point</button>
+              <button
+                onClick={addNearbyPoint}
+                className="mt-2 px-3 py-1 bg-gray-100 rounded"
+              >
+                Add Nearby Point
+              </button>
             </div>
           </div>
 
@@ -1048,13 +1393,56 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
             <div className="space-y-2">
               {(payload.construction_updates || []).map((cu, idx) => (
                 <div key={idx} className="grid grid-cols-6 gap-2 items-center">
-                  <textarea className="col-span-3 border p-1" value={cu.update_text} onChange={(e) => updateConstructionUpdate(idx, "update_text", e.target.value)} placeholder="Update text" />
-                  <input className="col-span-1 border p-1" value={cu.progress_percent} onChange={(e) => updateConstructionUpdate(idx, "progress_percent", e.target.value)} placeholder="%" />
-                  <input className="col-span-2 border p-1" type="date" value={cu.update_date || ""} onChange={(e) => updateConstructionUpdate(idx, "update_date", e.target.value)} />
-                  <button className="col-span-6 mt-1 text-sm text-red-600" onClick={() => removeConstructionUpdate(idx)}>Remove</button>
+                  <textarea
+                    className="col-span-3 border p-1"
+                    value={cu.update_text}
+                    onChange={(e) =>
+                      updateConstructionUpdate(
+                        idx,
+                        "update_text",
+                        e.target.value,
+                      )
+                    }
+                    placeholder="Update text"
+                  />
+                  <input
+                    className="col-span-1 border p-1"
+                    value={cu.progress_percent}
+                    onChange={(e) =>
+                      updateConstructionUpdate(
+                        idx,
+                        "progress_percent",
+                        e.target.value,
+                      )
+                    }
+                    placeholder="%"
+                  />
+                  <input
+                    className="col-span-2 border p-1"
+                    type="date"
+                    value={cu.update_date || ""}
+                    onChange={(e) =>
+                      updateConstructionUpdate(
+                        idx,
+                        "update_date",
+                        e.target.value,
+                      )
+                    }
+                  />
+                  <button
+                    className="col-span-6 mt-1 text-sm text-red-600"
+                    onClick={() => removeConstructionUpdate(idx)}
+                  >
+                    Remove
+                  </button>
                 </div>
               ))}
-              <button onClick={addConstructionUpdate} className="mt-2 px-3 py-1 bg-gray-100 rounded">Add Update</button>
+              <button
+                onClick={addConstructionUpdate}
+                className="mt-2 px-3 py-1 bg-gray-100 rounded"
+              >
+                Add Update
+              </button>
             </div>
           </div>
         </Step>
@@ -1065,24 +1453,65 @@ if(userRole !== "admin" && userRole !== "superAdmin") {
             <h3 className="text-lg font-semibold">Review & Submit</h3>
 
             <div className="border p-3 rounded space-y-1">
-              <p><strong>Title:</strong> {payload.title}</p>
-              <p><strong>Developer:</strong> {lookups.developers.find(d=>d.id===payload.developer_id)?.name || "-"}</p>
-              <p><strong>Community:</strong> {lookups.communities.find(c=>c.id===payload.community_id)?.name || "-"}</p>
-              <p><strong>Type:</strong> {lookups.propertyTypes.find(t=>t.id===payload.property_type_id)?.name || "-"}</p>
-              <p><strong>Status:</strong> {lookups.statusTypes.find(s=>s.id===payload.status_id)?.name || "-"}</p>
-              <p><strong>Starting Price:</strong> {payload.starting_price || "-"}</p>
-              <p><strong>Existing Images:</strong> {payload.existingImages.length}</p>
-              <p><strong>New Images:</strong> {(payload.imageFiles || []).length} files</p>
-              <p><strong>Existing Documents:</strong> {payload.existingDocuments.length}</p>
-              <p><strong>New Documents:</strong> {(payload.documentFiles || []).length} files</p>
-              <p><strong>Existing Floor Plans:</strong> {payload.existingFloorPlans.length}</p>
-              <p><strong>New Floor Plans:</strong> {(payload.floorPlanFiles || []).length} files</p>
+              <p>
+                <strong>Title:</strong> {payload.title}
+              </p>
+              <p>
+                <strong>Developer:</strong>{" "}
+                {lookups.developers.find((d) => d.id === payload.developer_id)
+                  ?.name || "-"}
+              </p>
+              <p>
+                <strong>Community:</strong>{" "}
+                {lookups.communities.find((c) => c.id === payload.community_id)
+                  ?.name || "-"}
+              </p>
+              <p>
+                <strong>Type:</strong>{" "}
+                {lookups.propertyTypes.find(
+                  (t) => t.id === payload.property_type_id,
+                )?.name || "-"}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                {lookups.statusTypes.find((s) => s.id === payload.status_id)
+                  ?.name || "-"}
+              </p>
+              <p>
+                <strong>Starting Price:</strong> {payload.starting_price || "-"}
+              </p>
+              <p>
+                <strong>Existing Images:</strong>{" "}
+                {payload.existingImages.length}
+              </p>
+              <p>
+                <strong>New Images:</strong> {(payload.imageFiles || []).length}{" "}
+                files
+              </p>
+              <p>
+                <strong>Existing Documents:</strong>{" "}
+                {payload.existingDocuments.length}
+              </p>
+              <p>
+                <strong>New Documents:</strong>{" "}
+                {(payload.documentFiles || []).length} files
+              </p>
+              <p>
+                <strong>Existing Floor Plans:</strong>{" "}
+                {payload.existingFloorPlans.length}
+              </p>
+              <p>
+                <strong>New Floor Plans:</strong>{" "}
+                {(payload.floorPlanFiles || []).length} files
+              </p>
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button onClick={onClose} variant="outline" disabled={loading}>Cancel</Button>
+              <Button onClick={onClose} variant="outline" disabled={loading}>
+                Cancel
+              </Button>
               <Button onClick={handleFinalSubmit} disabled={loading}>
-                {loading ? "Saving..." : (isEdit ? "Update" : "Create")}
+                {loading ? "Saving..." : isEdit ? "Update" : "Create"}
               </Button>
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
