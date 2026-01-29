@@ -1,5 +1,5 @@
 {
-  "name": "us_tech",
+  "name": "the_dubai_dreams",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -19,7 +19,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sendgrid/mail": "^8.1.5",
+    "@sendgrid/mail": "^8.1.6",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.57.4",
     "@tailwindcss/postcss": "^4.1.13",
